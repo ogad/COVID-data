@@ -30,7 +30,7 @@ def rolling_average(values, over):
 def get_response(url):
     """Perform a http GET request at the given url, 
     returning the response json."""
-    response = get(endpoint, timeout=10)
+    response = get(url, timeout=10)
     if response.status_code >= 400:
       raise RuntimeError(f'Request failed: { response.text }')
     return response.json()
@@ -52,6 +52,35 @@ def join_on_date(dfs):
     result['date'] = result['date'].map(date.fromisoformat)
     return result
 
+# %% Function to get the data
+def get_data(area_type, areas, request_dict):
+    request_structure = '{"date":"date"'
+    for key, value in request_dict.items():
+        request_structure += f',"{key}":"{value}"'
+    request_structure += '}'
+
+    obtained_dfs = {}
+    for area in areas:
+        while True:
+            try:
+                endpoint = (
+                    'https://api.coronavirus.data.gov.uk/v1/data?'
+                    f'filters=areaType={area_type};areaName={area}&'
+                    f'structure={request_structure}'
+                )
+                data = get_response(endpoint)
+                obtained_dfs[area] = pd.DataFrame(data['data']).sort_values('date')\
+                    .reset_index(drop=True).add_suffix(area.replace(' ',''))
+                break
+            except:
+                continue
+
+    joined_data = join_on_date(obtained_dfs)
+    return joined_data
+
+
+
+
 # %% Read table of population estimates (ONS Apr 2020)
 df_populations = pd.read_csv('populationestimates2020.csv', header=1)
 df_populations['Population'] = df_populations['All ages']\
@@ -62,24 +91,15 @@ df_populations.drop(columns='All ages', inplace=True)
 # %% Collect data for nations of the UK
 nations = ['England', 'Scotland', 'Wales', 'Northern Ireland']
 
-nation_dfs = {}
-for nation in nations:
-    print(f'processing {nation}')
-    endpoint = (
-      'https://api.coronavirus.data.gov.uk/v1/data?'
-      f'filters=areaType=nation;areaName={nation}&'
-      'structure={"date":"date","newCases":"newCasesByPublishDate", '
-      '"newDeaths":"newDeaths28DaysByPublishDate", '
-      '"newTestsOne":"newPillarOneTestsByPublishDate", '
-      '"newTestsTwo":"newPillarTwoTestsByPublishDate", '
-      '"newTestsThree":"newPillarThreeTestsByPublishDate",'
-      '"newTestsFour":"newPillarFourTestsByPublishDate"}'
-    )
-    data = get_response(endpoint)
-    nation_dfs[nation] = pd.DataFrame(data['data']).sort_values('date')\
-        .reset_index(drop=True).add_suffix(nation.replace(' ',''))
-
-joined_data_nations = join_on_date(nation_dfs)
+nation_params = {
+    "newCases":"newCasesByPublishDate", 
+    "newDeaths":"newDeaths28DaysByPublishDate",
+    "newTestsOne":"newPillarOneTestsByPublishDate",
+    "newTestsTwo":"newPillarTwoTestsByPublishDate", 
+    "newTestsThree":"newPillarThreeTestsByPublishDate",
+    "newTestsFour":"newPillarFourTestsByPublishDate"
+}
+joined_data_nations = get_data("nation", nations, nation_params)
 
 # Uncomment to backup:
 # joined_data_nations.to_csv('data_backup_nations.csv')
@@ -147,34 +167,19 @@ utlas = [
 # utlas = list(df_utlas['Name'])
 
 # %% Get data for local authorities
-utla_dfs = {}
-for utla in utlas:
-    try:
-        print(f'processing {utla}')
-        endpoint = (
-          'https://api.coronavirus.data.gov.uk/v1/data?'
-          f'filters=areaType=utla;areaName={utla}&'
-          'structure={"date":"date","newCases":"newCasesBySpecimenDate"}'
-        )
-        data = get_response(endpoint)
-        utla_dfs[utla] = pd.DataFrame(data['data'])\
-            .sort_values('date').reset_index(drop=True)\
-            .add_suffix(utla.replace(' ',''))
-    except:
-        utlas.remove(utla)
-        print("Failed, moving on.")
 
+utla_params = {
+    "newCases":"newCasesBySpecimenDate"
+}
+joined_data_utlas = get_data("utla", utlas, utla_params)
 
-# %%
-joined_data_utlas = join_on_date(utla_dfs)
 # Remove the last 2 days to mitigate reporting delay using Specimen date
 joined_data_utlas.drop(index=[len(joined_data_utlas)-1, len(joined_data_utlas)-2], inplace=True)
-
 
 # joined_data_utlas.to_csv('data_backup_utlas.csv')
 
 
-# %%
+# %% Calculate derived quantities for local authorities
 for utla in utlas:
     try:
         population = int(df_utla_populations[df_utla_populations['Name']==utla]['Population'])
@@ -188,8 +193,7 @@ for utla in utlas:
         utlas.remove(utla)
 
 
-# %%
-# utlas_new_cases_columns = [f"newCasesPerMillion7Day{utla.replace(' ','')}" for utla in utlas]
+# %% Plotting for local authorities
 if len(utlas) > 10:
     utla_sample = sample(utlas,5)
 else:
@@ -202,6 +206,3 @@ plt.legend(labels=utla_sample)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.show()
-
-
-# %%
