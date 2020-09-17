@@ -1,6 +1,7 @@
 # %% [markdown]
 # # Coronavirus Data Analysis
 
+
 # %% package imports
 
 # Module to send http requests
@@ -12,6 +13,12 @@ import pandas as pd
 from random import sample
 from datetime import date
 import statistics as stats
+
+# %% Settings
+
+backup = False # True or false
+numDays = False # False, or number of days to plot 
+# TODO: Make a date object to plot from
 
 
 # %% Defintition of the rolling average function
@@ -81,6 +88,7 @@ def get_data(area_type, areas, request_dict):
 
 
 
+
 # %% Read table of population estimates (ONS Apr 2020)
 df_populations = pd.read_csv('populationestimates2020.csv', header=1)
 df_populations['Population'] = df_populations['All ages']\
@@ -101,8 +109,8 @@ nation_params = {
 }
 joined_data_nations = get_data("nation", nations, nation_params)
 
-# Uncomment to backup:
-# joined_data_nations.to_csv('data_backup_nations.csv')
+if backup:
+    joined_data_nations.to_csv('data_backup_nations.csv')
 
 
 # %% Calculate derived quantities for nations
@@ -127,6 +135,9 @@ for nation in nations:
     joined_data_nations[f"newCasesPerMillion7Day{nation.replace(' ','')}"] = rolling_new_cases_per_million
     joined_data_nations[f"newDeathsPerMillion7Day{nation.replace(' ','')}"] = rolling_new_deaths_per_million
     joined_data_nations[f"positivity7Day{nation.replace(' ','')}"] = rolling_positivity
+
+if numDays:
+    joined_data_nations = joined_data_nations.iloc[-numDays:]
 
 # %% Plotting for nations
 nation_new_cases_columns = [f"newCasesPerMillion7Day{nation.replace(' ','')}" for nation in nations]
@@ -176,7 +187,8 @@ joined_data_utlas = get_data("utla", utlas, utla_params)
 # Remove the last 2 days to mitigate reporting delay using Specimen date
 joined_data_utlas.drop(index=[len(joined_data_utlas)-1, len(joined_data_utlas)-2], inplace=True)
 
-# joined_data_utlas.to_csv('data_backup_utlas.csv')
+if backup:
+    joined_data_utlas.to_csv('data_backup_utlas.csv')
 
 
 # %% Calculate derived quantities for local authorities
@@ -192,6 +204,8 @@ for utla in utlas:
         print(f'Failed processing {utla}, removing it.')
         utlas.remove(utla)
 
+if numDays:
+    joined_data_utlas = joined_data_utlas.iloc[-numDays:]
 
 # %% Plotting for local authorities
 if len(utlas) > 10:
