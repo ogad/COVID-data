@@ -17,8 +17,7 @@ import statistics as stats
 # %% Settings
 
 backup = False # True or false
-numDays = False # False, or number of days to plot 
-# TODO: Make a date object to plot from
+numDays = 45 # False, or number of days to plot 
 
 
 # %% Defintition of the rolling average function
