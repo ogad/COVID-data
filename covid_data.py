@@ -70,6 +70,10 @@ def join_on_date(dfs):
     result['date'] = result['date'].map(date.fromisoformat)
     return result
 
+# %% A helper function to produce lists of column names for plotting
+def get_column_names(feature, areas):
+    return [feature + area.replace(' ','') for area in areas]
+
 # %% Function to get the data
 def get_data(area_type, areas, request_dict):
     request_structure = '{"date":"date"'
@@ -149,9 +153,9 @@ if numDays:
     df_data_nations = df_data_nations.iloc[-numDays:]
 
 # %% Plotting for nations
-nation_new_cases_columns = [f"newCasesPerMillion7Day{nation.replace(' ','')}" for nation in nations]
-nation_new_deaths_columns =  [f"newDeathsPerMillion7Day{nation.replace(' ','')}" for nation in nations]
-nation_positivity_columns =  [f"positivity7Day{nation.replace(' ','')}" for nation in nations]
+nation_new_cases_columns = get_column_names("newCasesPerMillion7Day", nations)
+nation_new_deaths_columns = get_column_names("newDeathsPerMillion7Day", nations)
+nation_positivity_columns = get_column_names("positivity7Day", nations)
 
 df_data_nations.plot('date', nation_new_cases_columns)
 plt.legend(labels=nations)
@@ -215,7 +219,8 @@ if len(utlas) > 10:
 else:
     utla_sample = utlas
 
-utlas_new_cases_columns = [f"newCasesPerMillion7Day{utla.replace(' ','')}" for utla in utla_sample]
+utlas_new_cases_columns = get_column_names("newCasesPerMillion7Day", ulta_sample)
+
 
 joined_data_utlas.plot('date', utlas_new_cases_columns)
 plt.legend(labels=utla_sample)
