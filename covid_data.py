@@ -17,7 +17,19 @@ import statistics as stats
 # %% Settings
 
 backup = False # True or false
-numDays = 45 # False, or number of days to plot 
+numDays = False # False, or number of days to plot
+# To plot different Upper tier local authorities, simply add their name to this list.
+# If more than 10, will plot a random sample of 5 of these.
+# If False, will take a random sample of all the UTLAs; will retrieve data from all UTLAs
+utlas = [
+    'Cheshire West and Chester',
+    'Leicester',
+    'Northumberland',
+    'North Yorkshire',
+    'Wirral', 
+    'Oxfordshire',
+    'Cumbria'
+]
 
 
 # %% Defintition of the rolling average function
@@ -67,7 +79,8 @@ def get_data(area_type, areas, request_dict):
 
     obtained_dfs = {}
     for area in areas:
-        while True:
+        i = 0
+        while i < 5:
             try:
                 endpoint = (
                     'https://api.coronavirus.data.gov.uk/v1/data?'
@@ -79,84 +92,82 @@ def get_data(area_type, areas, request_dict):
                     .reset_index(drop=True).add_suffix(area.replace(' ',''))
                 break
             except:
+                i +=1
                 continue
 
     joined_data = join_on_date(obtained_dfs)
     return joined_data
 
-
-
-
-
 # %% Read table of population estimates (ONS Apr 2020)
-df_populations = pd.read_csv('populationestimates2020.csv', header=1)
-df_populations['Population'] = df_populations['All ages']\
-    .replace(',','',regex=True).fillna(0).astype(int)
-df_populations.drop(columns='All ages', inplace=True)
-
+def read_populations(file):
+    df = pd.read_csv(file, header=1)
+    df['Population'] = df['All ages']\
+        .replace(',','',regex=True).fillna(0).astype(int)
+    df.drop(columns='All ages', inplace=True)
+    return df
+df_populations = read_populations('populationestimates2020.csv')
 
 # %% Collect data for nations of the UK
 nations = ['England', 'Scotland', 'Wales', 'Northern Ireland']
+def get_data_nations():
+    nation_params = {
+        "newCases":"newCasesByPublishDate", 
+        "newDeaths":"newDeaths28DaysByPublishDate",
+        "newTestsOne":"newPillarOneTestsByPublishDate",
+        "newTestsTwo":"newPillarTwoTestsByPublishDate", 
+        "newTestsThree":"newPillarThreeTestsByPublishDate",
+        "newTestsFour":"newPillarFourTestsByPublishDate"
+    }
+    joined_data_nations = get_data("nation", nations, nation_params)
+    for nation in nations:
+        population = int(df_populations[df_populations['Name']==nation.upper()]['Population'])
+        population_in_millions = population / 10**6
+        new_cases = joined_data_nations[f"newCases{nation.replace(' ','')}"]
+        new_cases_per_million = joined_data_nations[f"newCases{nation.replace(' ','')}"] / population_in_millions
+        new_deaths_per_million = joined_data_nations[f"newDeaths{nation.replace(' ','')}"] / population_in_millions
+        new_tests = joined_data_nations[f"newTestsOne{nation.replace(' ','')}"].astype(float)\
+            .add(joined_data_nations[f"newTestsTwo{nation.replace(' ','')}"].astype(float), fill_value=0.0)\
+            .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
+            .add(joined_data_nations[f"newTestsFour{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
+            .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)
+        positivity_rate = new_cases.astype(float) / new_tests.astype(float)
+        rolling_positivity = rolling_average(positivity_rate, 7)
+        rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
+        rolling_new_deaths_per_million = rolling_average(new_deaths_per_million,7)
+        
+        joined_data_nations[f"newCasesPerMillion{nation.replace(' ','')}"] = new_cases_per_million
+        joined_data_nations[f"newDeathsPerMillion{nation.replace(' ','')}"] = new_deaths_per_million
+        joined_data_nations[f"newCasesPerMillion7Day{nation.replace(' ','')}"] = rolling_new_cases_per_million
+        joined_data_nations[f"newDeathsPerMillion7Day{nation.replace(' ','')}"] = rolling_new_deaths_per_million
+        joined_data_nations[f"positivity7Day{nation.replace(' ','')}"] = rolling_positivity
+        return joined_data_nations
 
-nation_params = {
-    "newCases":"newCasesByPublishDate", 
-    "newDeaths":"newDeaths28DaysByPublishDate",
-    "newTestsOne":"newPillarOneTestsByPublishDate",
-    "newTestsTwo":"newPillarTwoTestsByPublishDate", 
-    "newTestsThree":"newPillarThreeTestsByPublishDate",
-    "newTestsFour":"newPillarFourTestsByPublishDate"
-}
-joined_data_nations = get_data("nation", nations, nation_params)
-
+df_data_nations = get_data_nations()
 if backup:
-    joined_data_nations.to_csv('data_backup_nations.csv')
-
-
-# %% Calculate derived quantities for nations
-for nation in nations:
-    population = int(df_populations[df_populations['Name']==nation.upper()]['Population'])
-    population_in_millions = population / 10**6
-    new_cases = joined_data_nations[f"newCases{nation.replace(' ','')}"]
-    new_cases_per_million = joined_data_nations[f"newCases{nation.replace(' ','')}"] / population_in_millions
-    new_deaths_per_million = joined_data_nations[f"newDeaths{nation.replace(' ','')}"] / population_in_millions
-    new_tests = joined_data_nations[f"newTestsOne{nation.replace(' ','')}"].astype(float)\
-        .add(joined_data_nations[f"newTestsTwo{nation.replace(' ','')}"].astype(float), fill_value=0.0)\
-        .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
-        .add(joined_data_nations[f"newTestsFour{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
-        .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)
-    positivity_rate = new_cases.astype(float) / new_tests.astype(float)
-    rolling_positivity = rolling_average(positivity_rate, 7)
-    rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
-    rolling_new_deaths_per_million = rolling_average(new_deaths_per_million,7)
-    
-    joined_data_nations[f"newCasesPerMillion{nation.replace(' ','')}"] = new_cases_per_million
-    joined_data_nations[f"newDeathsPerMillion{nation.replace(' ','')}"] = new_deaths_per_million
-    joined_data_nations[f"newCasesPerMillion7Day{nation.replace(' ','')}"] = rolling_new_cases_per_million
-    joined_data_nations[f"newDeathsPerMillion7Day{nation.replace(' ','')}"] = rolling_new_deaths_per_million
-    joined_data_nations[f"positivity7Day{nation.replace(' ','')}"] = rolling_positivity
-
+    df_data_nations.to_csv('data_backup_nations.csv')
 if numDays:
-    joined_data_nations = joined_data_nations.iloc[-numDays:]
+    df_data_nations = df_data_nations.iloc[-numDays:]
 
 # %% Plotting for nations
 nation_new_cases_columns = [f"newCasesPerMillion7Day{nation.replace(' ','')}" for nation in nations]
 nation_new_deaths_columns =  [f"newDeathsPerMillion7Day{nation.replace(' ','')}" for nation in nations]
 nation_positivity_columns =  [f"positivity7Day{nation.replace(' ','')}" for nation in nations]
 
-joined_data_nations.plot('date', nation_new_cases_columns)
+df_data_nations.plot('date', nation_new_cases_columns)
 plt.legend(labels=nations)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 
-joined_data_nations.plot('date', nation_new_deaths_columns)
+df_data_nations.plot('date', nation_new_deaths_columns)
 plt.legend(labels=nations)
 plt.title('New Deaths per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 
-joined_data_nations.plot('date', nation_positivity_columns)
+df_data_nations.plot('date', nation_positivity_columns)
 plt.legend(labels=nations)
 plt.title('Positivity rate (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
+plt.ylim(0,0.05)
 
 
 
@@ -165,16 +176,8 @@ df_utlas = pd.read_csv('utlas.csv', names=["Name"])
 df_utla_populations = df_utlas.merge(df_populations, how='left', on="Name")
 df_utla_populations.rename(columns = {"Geography1":"Geography"})
 
-# To plot different Upper tier local authorities, simply add their name to this list.
-utlas = [
-    'Cheshire West and Chester',
-    'Leicester',
-    'Northumberland',
-    'North Yorkshire',
-    'Wirral', 
-    'Oxfordshire',
-    'Cumbria']
-# utlas = list(df_utlas['Name'])
+if not utlas:
+    utlas = list(df_utlas['Name'])
 
 # %% Get data for local authorities
 
