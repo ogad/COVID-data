@@ -16,7 +16,8 @@ import statistics as stats
 
 # %% Settings
 
-backup = False # True or false
+make_backup = False # True or false
+use_backup = False # True or false
 numDays = False # False, or number of days to plot
 # To plot different Upper tier local authorities, simply add their name to this list.
 # If more than 10, will plot a random sample of 5 of these.
@@ -146,8 +147,11 @@ def get_data_nations():
         joined_data_nations[f"positivity7Day{nation.replace(' ','')}"] = rolling_positivity
         return joined_data_nations
 
-df_data_nations = get_data_nations()
-if backup:
+if not use_backup:
+    df_data_nations = get_data_nations()
+else:
+    df_data_nations = pd.read_csv('data_backup_nations.csv')
+if make_backup:
     df_data_nations.to_csv('data_backup_nations.csv')
 if numDays:
     df_data_nations = df_data_nations.iloc[-numDays:]
@@ -184,35 +188,38 @@ if not utlas:
     utlas = list(df_utlas['Name'])
 
 # %% Get data for local authorities
+def get_data_utlas():
+    utla_params = {
+        "newCases":"newCasesBySpecimenDate"
+    }
+    joined_data_utlas = get_data("utla", utlas, utla_params)
 
-utla_params = {
-    "newCases":"newCasesBySpecimenDate"
-}
-joined_data_utlas = get_data("utla", utlas, utla_params)
+    # Remove the last 2 days to mitigate reporting delay using Specimen date
+    joined_data_utlas.drop(index=[len(joined_data_utlas)-1, len(joined_data_utlas)-2], inplace=True)
 
-# Remove the last 2 days to mitigate reporting delay using Specimen date
-joined_data_utlas.drop(index=[len(joined_data_utlas)-1, len(joined_data_utlas)-2], inplace=True)
+    for utla in utlas:
+        try:
+            population = int(df_utla_populations[df_utla_populations['Name']==utla]['Population'])
+            population_in_millions = population / 10**6
+            new_cases_per_million = joined_data_utlas[f"newCases{utla.replace(' ','')}"]/population_in_millions
+            rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
+            joined_data_utlas[f"newCasesPerMillion{utla.replace(' ','')}"] = new_cases_per_million
+            joined_data_utlas[f"newCasesPerMillion7Day{utla.replace(' ','')}"] = rolling_new_cases_per_million
+        except:
+            print(f'Failed processing {utla}, removing it.')
+            utlas.remove(utla)
 
-if backup:
+    if numDays:
+        joined_data_utlas = joined_data_utlas.iloc[-numDays:]
+    
+    return joined_data_utlas
+
+if not use_backup:
+    joined_data_utlas = get_data_utlas()
+else:
+    joined_data_utlas = pd.read_csv('data_backup_utlas.csv')
+if make_backup:
     joined_data_utlas.to_csv('data_backup_utlas.csv')
-
-
-# %% Calculate derived quantities for local authorities
-for utla in utlas:
-    try:
-        population = int(df_utla_populations[df_utla_populations['Name']==utla]['Population'])
-        population_in_millions = population / 10**6
-        new_cases_per_million = joined_data_utlas[f"newCases{utla.replace(' ','')}"]/population_in_millions
-        rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
-        joined_data_utlas[f"newCasesPerMillion{utla.replace(' ','')}"] = new_cases_per_million
-        joined_data_utlas[f"newCasesPerMillion7Day{utla.replace(' ','')}"] = rolling_new_cases_per_million
-    except:
-        print(f'Failed processing {utla}, removing it.')
-        utlas.remove(utla)
-
-if numDays:
-    joined_data_utlas = joined_data_utlas.iloc[-numDays:]
-
 # %% Plotting for local authorities
 if len(utlas) > 10:
     utla_sample = sample(utlas,5)
