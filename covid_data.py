@@ -18,7 +18,8 @@ import statistics as stats
 
 make_backup = False # True or false
 use_backup = False # True or false
-numDays = False # False, or number of days to plot
+save_figs = False
+num_days = False # False, or number of days to plot
 # To plot different Upper tier local authorities, simply add their name to this list.
 # If more than 10, will plot a random sample of 5 of these.
 # If False, will take a random sample of all the UTLAs; will retrieve data from all UTLAs
@@ -139,13 +140,13 @@ def get_data_nations():
         rolling_positivity = rolling_average(positivity_rate, 7)
         rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
         rolling_new_deaths_per_million = rolling_average(new_deaths_per_million,7)
-        
+
         joined_data_nations[f"newCasesPerMillion{nation.replace(' ','')}"] = new_cases_per_million
         joined_data_nations[f"newDeathsPerMillion{nation.replace(' ','')}"] = new_deaths_per_million
         joined_data_nations[f"newCasesPerMillion7Day{nation.replace(' ','')}"] = rolling_new_cases_per_million
         joined_data_nations[f"newDeathsPerMillion7Day{nation.replace(' ','')}"] = rolling_new_deaths_per_million
         joined_data_nations[f"positivity7Day{nation.replace(' ','')}"] = rolling_positivity
-        return joined_data_nations
+    return joined_data_nations
 
 if not use_backup:
     df_data_nations = get_data_nations()
@@ -153,8 +154,8 @@ else:
     df_data_nations = pd.read_csv('data_backup_nations.csv')
 if make_backup:
     df_data_nations.to_csv('data_backup_nations.csv')
-if numDays:
-    df_data_nations = df_data_nations.iloc[-numDays:]
+if num_days:
+    df_data_nations = df_data_nations.iloc[-num_days:]
 
 # %% Plotting for nations
 nation_new_cases_columns = get_column_names("newCasesPerMillion7Day", nations)
@@ -165,17 +166,31 @@ df_data_nations.plot('date', nation_new_cases_columns)
 plt.legend(labels=nations)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
+if save_figs:
+    if num_days:
+        plt.savefig(f'new_cases_nations_{num_days}_days.svg')
+    else:
+        plt.savefig(f'new_cases_nations.svg')
 
 df_data_nations.plot('date', nation_new_deaths_columns)
 plt.legend(labels=nations)
 plt.title('New Deaths per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
+if save_figs:
+    if num_days:
+        plt.savefig(f'new_deaths_nations_{num_days}_days.svg')
+    else:
+        plt.savefig(f'new_deaths_nations.svg')
 
 df_data_nations.plot('date', nation_positivity_columns)
 plt.legend(labels=nations)
 plt.title('Positivity rate (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
-plt.ylim(0,0.05)
+if save_figs:
+    if num_days:
+        plt.savefig(f'positivity_nations_{num_days}_days.svg')
+    else:
+        plt.savefig(f'positivity_nations.svg')
 
 
 
@@ -209,8 +224,8 @@ def get_data_utlas():
             print(f'Failed processing {utla}, removing it.')
             utlas.remove(utla)
 
-    if numDays:
-        joined_data_utlas = joined_data_utlas.iloc[-numDays:]
+    if num_days:
+        joined_data_utlas = joined_data_utlas.iloc[-num_days:]
     
     return joined_data_utlas
 
@@ -226,7 +241,7 @@ if len(utlas) > 10:
 else:
     utla_sample = utlas
 
-utlas_new_cases_columns = get_column_names("newCasesPerMillion7Day", ulta_sample)
+utlas_new_cases_columns = get_column_names("newCasesPerMillion7Day", utla_sample)
 
 
 joined_data_utlas.plot('date', utlas_new_cases_columns)
@@ -234,3 +249,8 @@ plt.legend(labels=utla_sample)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.show()
+if save_figs:
+    if num_days:
+        plt.savefig(f'new_cases_utlas_{num_days}_days.svg')
+    else:
+        plt.savefig(f'new_cases_utlas.svg')
