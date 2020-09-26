@@ -167,6 +167,7 @@ df_data_nations.plot('date', nation_new_cases_columns)
 plt.legend(labels=nations)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
+plt.xlabel('Date')
 if save_figs:
     if num_days:
         plt.savefig(f'new_cases_nations_{num_days}_days.svg')
@@ -177,6 +178,7 @@ df_data_nations.plot('date', nation_new_deaths_columns)
 plt.legend(labels=nations)
 plt.title('New Deaths per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
+plt.xlabel('Date')
 if save_figs:
     if num_days:
         plt.savefig(f'new_deaths_nations_{num_days}_days.svg')
@@ -188,6 +190,7 @@ plt.legend(labels=nations)
 plt.title('Positivity rate (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.ylim(-0.005,positivity_ylim)
+plt.xlabel('Date')
 if save_figs:
     if num_days:
         plt.savefig(f'positivity_nations_{num_days}_days.svg')
@@ -250,7 +253,7 @@ joined_data_utlas.plot('date', utlas_new_cases_columns)
 plt.legend(labels=utla_sample)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
-plt.show()
+plt.xlabel('Date')
 if save_figs:
     if num_days:
         plt.savefig(f'new_cases_utlas_{num_days}_days.svg')
