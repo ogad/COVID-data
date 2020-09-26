@@ -18,7 +18,7 @@ import statistics as stats
 
 make_backup = False # True or false
 use_backup = False # True or false
-save_figs = False
+save_figs = True
 num_days = False # False, or number of days to plot
 positivity_ylim = 0.1
 # To plot different Upper tier local authorities, simply add their name to this list.
@@ -168,6 +168,7 @@ plt.legend(labels=nations)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.xlabel('Date')
+plt.tight_layout()
 if save_figs:
     if num_days:
         plt.savefig(f'new_cases_nations_{num_days}_days.svg')
@@ -179,6 +180,7 @@ plt.legend(labels=nations)
 plt.title('New Deaths per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.xlabel('Date')
+plt.tight_layout()
 if save_figs:
     if num_days:
         plt.savefig(f'new_deaths_nations_{num_days}_days.svg')
@@ -191,6 +193,7 @@ plt.title('Positivity rate (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.ylim(-0.005,positivity_ylim)
 plt.xlabel('Date')
+plt.tight_layout()
 if save_figs:
     if num_days:
         plt.savefig(f'positivity_nations_{num_days}_days.svg')
@@ -254,6 +257,7 @@ plt.legend(labels=utla_sample)
 plt.title('New Cases per Million Population (7 day rolling)')
 plt.xticks(rotation=30, ha='right')
 plt.xlabel('Date')
+plt.tight_layout()
 if save_figs:
     if num_days:
         plt.savefig(f'new_cases_utlas_{num_days}_days.svg')
