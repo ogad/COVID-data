@@ -115,6 +115,7 @@ def read_populations(file):
 df_populations = read_populations('populationestimates2020.csv')
 
 # %% Collect data for nations of the UK
+# TODO: Collect data for each feature seperately
 nations = ['England', 'Scotland', 'Wales', 'Northern Ireland']
 def get_data_nations():
     nation_params = {
@@ -212,9 +213,7 @@ if not utlas:
 
 # %% Get data for local authorities
 def get_data_utlas():
-    utla_params = {
-        "newCases":"newCasesBySpecimenDate"
-    }
+    utla_params = {"newCases":"newCasesBySpecimenDate"}
     joined_data_utlas = get_data("utla", utlas, utla_params)
 
     # Remove the last 2 days to mitigate reporting delay using Specimen date
