@@ -231,6 +231,8 @@ def get_data_utlas():
             print(f'Failed processing {utla}, removing it.')
             utlas.remove(utla)
 
+    joined_data_utlas = joined_data_utlas[:-2]
+
     if num_days:
         joined_data_utlas = joined_data_utlas.iloc[-num_days:]
     
@@ -262,3 +264,4 @@ if save_figs:
         plt.savefig(f'new_cases_utlas_{num_days}_days.svg')
     else:
         plt.savefig(f'new_cases_utlas.svg')
+# %%
