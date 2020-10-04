@@ -18,7 +18,7 @@ import statistics as stats
 
 make_backup = False # True or false
 use_backup = False # True or false
-save_figs = True
+save_figs = False
 num_days = False # False, or number of days to plot
 positivity_ylim = 0.1
 # To plot different Upper tier local authorities, simply add their name to this list.

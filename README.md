@@ -5,6 +5,7 @@ The population data is from the mid-year population estimates, `mid-2019-april-2
 These files contain public sector information from these sources licensed under the Open Government Licence v3.0.
 ## Example visualisations
 These visualisations each use a 7-day rolling average to draw attention to the overall trend and reduce the effect of variations during the working week and noise.
+These figures last updated on 04/10/2020.
 ### Cases by nation throughout the pandemic
 ![Case rate by nation in the UK](new_cases_nations.svg)
 ### Deaths by nation throughout the pandemic
