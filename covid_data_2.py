@@ -87,11 +87,18 @@ def per_million(value, population):
 def get_population(area, pop_df):
     return pop_df[pop_df['Name'] == area].reset_index(drop=True).at[0,'Population']
 
-def plot(areas, dfs, feature):
+def plot(areas, dfs, feature, title=None):
     plt.figure()
     for area in areas:
-        plt.plot(dfs[area]['date'], dfs[area][feature], label=area)
+        plot_df = dfs[area].dropna(subset=[feature])
+        plt.plot(plot_df['date'], plot_df[feature], label=area)
     plt.legend()
+    plt.xlabel('Date')
+    if title:
+        plt.title(title)
+
+def positivity_rate(df):
+    return df['newCases'].astype(float) / df['newTests'].astype(float)
 
 
 # %% 
@@ -102,6 +109,8 @@ def get_data_nations(nations, pop_df):
         "newDeaths":"newDeaths28DaysByPublishDate",
         "newTestsOne":"newPillarOneTestsByPublishDate",
         "newTestsTwo":"newPillarTwoTestsByPublishDate",
+        "newTestsThree": "newPillarThreeTestsByPublishDate",
+        "newTestsFour":"newPillarFourTestsByPublishDate"
     }
     for nation in nations:
         df = get_data('nation', nation, nation_features)
@@ -110,24 +119,26 @@ def get_data_nations(nations, pop_df):
         df['newDeathsPerMillion7Day'] = rolling_average(df['newDeathsPerMillion'],7)
         df['newCasesPerMillion'] = per_million(df['newCases'], pop)
         df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
-        df['newTests'] = df['newTestsOne'] + df['newTestsTwo']
+        df['newTests'] = df['newTestsOne'].astype(float)\
+            .add(df['newTestsTwo'].astype(float),fill_value = 0.0)\
+            .add(df['newTestsThree'].astype(float), fill_value = 0.0)\
+            .add(df['newTestsFour'].astype(float), fill_value = 0.0)
+        df['newTests'].fillna(0, inplace=True)
+        df['positivity'] = positivity_rate(df)
+        df['positivity7Day'] = rolling_average(df['positivity'], 7)
         nation_dfs[nation] = df
+        print(nation)
+        print(df['newTests'].tail())
     return nation_dfs
-
-# %%
-
 
 # %%
 
 nations = ['ENGLAND', 'SCOTLAND', 'WALES', 'NORTHERN IRELAND']
 df_populations = read_populations('populationestimates2020.csv')
 nation_dfs = get_data_nations(nations, df_populations)
-# for nation in nations:
-#     plt.plot(nation_dfs[nation]['date'], nation_dfs[nation]['newDeathsPerMillion7Day'], label=nation)
-# plt.legend()
-plot(nations, nation_dfs, 'newDeathsPerMillion7Day')
-plot(nations, nation_dfs, 'newCasesPerMillion7Day')
-
+plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)")
+plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)")
+plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)")
 
 
 # %%
