@@ -9,7 +9,7 @@ from datetime import date, timedelta
 import statistics as stats
 
 # %% Settings
-make_backup = False # True or false
+make_backup = True # True or false
 use_backup = False # True or false
 save_figs = True
 num_days = False # False, or number of days to plot
@@ -104,7 +104,7 @@ def plot(areas, dfs, feature, title=None, ylim=None, file=None, drop=0):
     if ylim:
         plt.ylim(-0.05*ylim,ylim)
     if save_figs and file:
-        plt.savefig(f'{file}.svg')
+        plt.savefig(f'img/{file}.svg')
 
 
 def positivity_rate(df):
@@ -142,11 +142,11 @@ def get_data_nations(nations, pop_df):
             df['positivity7Day'] = rolling_average(df['positivity'], 7)
             nation_dfs[nation] = df
         else:
-            df = pd.read_csv(f'{nation}.csv')
+            df = pd.read_csv(f'backups/{nation}.csv')
             df['date'] = df['date'].map(date.fromisoformat)
             nation_dfs[nation] = df
         if make_backup:
-            df.to_csv(f'{nation}.csv')
+            df.to_csv(f'backups\{nation}.csv')
     return nation_dfs
 
 # %% 
@@ -163,11 +163,11 @@ def get_data_utlas(utlas, pop_df):
             df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
             utla_dfs[utla] = df
         else:
-            df = pd.read_csv(f'{utla}.csv')
+            df = pd.read_csv(f'backups/{utla}.csv')
             df['date'] = df['date'].map(date.fromisoformat)
             utla_dfs[utla] = df
         if make_backup:
-            df.to_csv(f'{utla}.csv')
+            df.to_csv(f'backups/{utla}.csv')
     return utla_dfs
 
 # %%
