@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 plt.style.use('seaborn-notebook')
 import pandas as pd
 from random import sample
-from datetime import date
+from datetime import date, timedelta
 import statistics as stats
 
 # %% Settings
 make_backup = False # True or false
 use_backup = False # True or false
-save_figs = False
+save_figs = True
 num_days = False # False, or number of days to plot
 positivity_ylim = 0.1
 # To plot different Upper tier local authorities, simply add their name to this list.
@@ -87,19 +87,25 @@ def per_million(value, population):
 def get_population(area, pop_df):
     return pop_df[pop_df['Name'] == area].reset_index(drop=True).at[0,'Population']
 
-def plot(areas, dfs, feature, title=None, ylim=None):
+def plot(areas, dfs, feature, title=None, ylim=None, file=None, drop=0):
     plt.figure()
     for area in areas:
         plot_df = dfs[area].dropna(subset=[feature])
+        plot_df = plot_df.drop(plot_df.tail(drop).index)
+        if num_days:
+            change_days = timedelta(days=num_days)
+            plot_df = plot_df[plot_df['date'] >= date.today() - change_days]
         plt.plot(plot_df['date'], plot_df[feature], label=area)
     plt.legend()
     plt.xlabel('Date')
     if title:
         plt.title(title)
     plt.xticks(rotation=30, ha='right')
-    plt.grid()
     if ylim:
         plt.ylim(-0.05*ylim,ylim)
+    if save_figs and file:
+        plt.savefig(f'{file}.svg')
+
 
 def positivity_rate(df):
     return df['newCases'].astype(float) / df['newTests'].astype(float)
@@ -118,36 +124,50 @@ def get_data_nations(nations, pop_df):
         "newAdmissions": "newAdmissions"
     }
     for nation in nations:
-        df = get_data('nation', nation, nation_features)
-        pop = get_population(nation, pop_df)
-        df['newDeathsPerMillion'] = per_million(df['newDeaths'], pop)
-        df['newDeathsPerMillion7Day'] = rolling_average(df['newDeathsPerMillion'],7)
-        df['newCasesPerMillion'] = per_million(df['newCases'], pop)
-        df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
-        df['newAdmissionsPerMillion'] = per_million(df['newAdmissions'], pop)
-        df['newAdmissionsPerMillion7Day'] = rolling_average(df['newAdmissionsPerMillion'].fillna(0),7)
-        df['newTests'] = df['newTestsOne'].astype(float)\
-            .add(df['newTestsTwo'].astype(float),fill_value = 0.0)\
-            .add(df['newTestsThree'].astype(float), fill_value = 0.0)\
-            .add(df['newTestsFour'].astype(float), fill_value = 0.0)
-        df['newTests'].fillna(0, inplace=True)
-        df['positivity'] = positivity_rate(df)
-        df['positivity7Day'] = rolling_average(df['positivity'], 7)
-        nation_dfs[nation] = df
+        if not use_backup:
+            df = get_data('nation', nation, nation_features)
+            pop = get_population(nation, pop_df)
+            df['newDeathsPerMillion'] = per_million(df['newDeaths'], pop)
+            df['newDeathsPerMillion7Day'] = rolling_average(df['newDeathsPerMillion'],7)
+            df['newCasesPerMillion'] = per_million(df['newCases'], pop)
+            df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
+            df['newAdmissionsPerMillion'] = per_million(df['newAdmissions'], pop)
+            df['newAdmissionsPerMillion7Day'] = rolling_average(df['newAdmissionsPerMillion'].fillna(0),7)
+            df['newTests'] = df['newTestsOne'].astype(float)\
+                .add(df['newTestsTwo'].astype(float),fill_value = 0.0)\
+                .add(df['newTestsThree'].astype(float), fill_value = 0.0)\
+                .add(df['newTestsFour'].astype(float), fill_value = 0.0)
+            df['newTests'].fillna(0, inplace=True)
+            df['positivity'] = positivity_rate(df)
+            df['positivity7Day'] = rolling_average(df['positivity'], 7)
+            nation_dfs[nation] = df
+        else:
+            df = pd.read_csv(f'{nation}.csv')
+            df['date'] = df['date'].map(date.fromisoformat)
+            nation_dfs[nation] = df
+        if make_backup:
+            df.to_csv(f'{nation}.csv')
     return nation_dfs
 
 # %% 
-def get_data_utlas(utlas, pop_df, drop=2):
+def get_data_utlas(utlas, pop_df):
     utla_dfs = {}
     utla_features = {
         "newCases":"newCasesBySpecimenDate"
     }
     for utla in utlas:
-        df = get_data('utla', utla, utla_features)
-        pop = get_population(utla, pop_df)
-        df['newCasesPerMillion'] = per_million(df['newCases'], pop)
-        df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
-        utla_dfs[utla] = df.drop(df.tail(drop).index)
+        if not use_backup:
+            df = get_data('utla', utla, utla_features)
+            pop = get_population(utla, pop_df)
+            df['newCasesPerMillion'] = per_million(df['newCases'], pop)
+            df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
+            utla_dfs[utla] = df
+        else:
+            df = pd.read_csv(f'{utla}.csv')
+            df['date'] = df['date'].map(date.fromisoformat)
+            utla_dfs[utla] = df
+        if make_backup:
+            df.to_csv(f'{utla}.csv')
     return utla_dfs
 
 # %%
@@ -155,13 +175,11 @@ def get_data_utlas(utlas, pop_df, drop=2):
 nations = ['ENGLAND', 'SCOTLAND', 'WALES', 'NORTHERN IRELAND']
 df_populations = read_populations('populationestimates2020.csv')
 nation_dfs = get_data_nations(nations, df_populations)
-plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)")
-plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)")
-plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1)
-plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions (7 day rolling)")
+plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)", file='nation_deaths')
+plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)", file='nation_cases')
+plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1, file='nation_positivity')
+plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions per Million (7 day rolling)", drop=2, file='nation_admissions')
 
 # %%
 utla_dfs = get_data_utlas(utlas, df_populations)
-plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)")
-
-# %%
+plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)", drop=2, file='utla_cases')
