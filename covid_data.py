@@ -137,8 +137,7 @@ def get_data_nations():
         new_tests = joined_data_nations[f"newTestsOne{nation.replace(' ','')}"].astype(float)\
             .add(joined_data_nations[f"newTestsTwo{nation.replace(' ','')}"].astype(float), fill_value=0.0)\
             .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
-            .add(joined_data_nations[f"newTestsFour{nation.replace(' ','')}"].astype(float), fill_value = 0.0)\
-            .add(joined_data_nations[f"newTestsThree{nation.replace(' ','')}"].astype(float), fill_value = 0.0)
+            .add(joined_data_nations[f"newTestsFour{nation.replace(' ','')}"].astype(float), fill_value = 0.0)
         positivity_rate = new_cases.astype(float) / new_tests.astype(float)
         rolling_positivity = rolling_average(positivity_rate, 7)
         rolling_new_cases_per_million = rolling_average(new_cases_per_million,7)
