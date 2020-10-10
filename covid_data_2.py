@@ -87,7 +87,7 @@ def per_million(value, population):
 def get_population(area, pop_df):
     return pop_df[pop_df['Name'] == area].reset_index(drop=True).at[0,'Population']
 
-def plot(areas, dfs, feature, title=None):
+def plot(areas, dfs, feature, title=None, ylim=None):
     plt.figure()
     for area in areas:
         plot_df = dfs[area].dropna(subset=[feature])
@@ -98,6 +98,8 @@ def plot(areas, dfs, feature, title=None):
         plt.title(title)
     plt.xticks(rotation=30, ha='right')
     plt.grid()
+    if ylim:
+        plt.ylim(-0.05*ylim,ylim)
 
 def positivity_rate(df):
     return df['newCases'].astype(float) / df['newTests'].astype(float)
@@ -112,7 +114,8 @@ def get_data_nations(nations, pop_df):
         "newTestsOne":"newPillarOneTestsByPublishDate",
         "newTestsTwo":"newPillarTwoTestsByPublishDate",
         "newTestsThree": "newPillarThreeTestsByPublishDate",
-        "newTestsFour":"newPillarFourTestsByPublishDate"
+        "newTestsFour":"newPillarFourTestsByPublishDate",
+        "newAdmissions": "newAdmissions"
     }
     for nation in nations:
         df = get_data('nation', nation, nation_features)
@@ -121,6 +124,8 @@ def get_data_nations(nations, pop_df):
         df['newDeathsPerMillion7Day'] = rolling_average(df['newDeathsPerMillion'],7)
         df['newCasesPerMillion'] = per_million(df['newCases'], pop)
         df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
+        df['newAdmissionsPerMillion'] = per_million(df['newAdmissions'], pop)
+        df['newAdmissionsPerMillion7Day'] = rolling_average(df['newAdmissionsPerMillion'].fillna(0),7)
         df['newTests'] = df['newTestsOne'].astype(float)\
             .add(df['newTestsTwo'].astype(float),fill_value = 0.0)\
             .add(df['newTestsThree'].astype(float), fill_value = 0.0)\
@@ -152,10 +157,11 @@ df_populations = read_populations('populationestimates2020.csv')
 nation_dfs = get_data_nations(nations, df_populations)
 plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)")
 plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)")
-plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)")
-
+plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1)
+plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions (7 day rolling)")
 
 # %%
 utla_dfs = get_data_utlas(utlas, df_populations)
 plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)")
+
 # %%
