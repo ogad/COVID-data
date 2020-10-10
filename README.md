@@ -4,6 +4,7 @@
 The goal of this project is to make simple visualisations of the case, death and testing data for different regions of the UK, using the data from the [Coronavirus (COVID-19) in the UK](https://coronavirus.data.gov.uk/developers-guide) data and API, developed by Public Health England and NHSX. 
 The population data is from the mid-year population estimates, `mid-2019-april-2020-geography', which is made availiable by the ONS [here](https://www.ons.gov.uk/datasets/mid-year-pop-est/editions/mid-2019-april-2020-geography/versions/1).
 These files contain public sector information from these sources licensed under the Open Government Licence v3.0.
+Mapping data contains OS data © Crown copyright and database right 2019.
 
 ## Example visualisations
 These visualisations each use a 7-day rolling average to draw attention to the overall trend and reduce the effect of variations during the working week and noise.
