@@ -103,6 +103,7 @@ def plot(areas, dfs, feature, title=None, ylim=None, file=None, drop=0):
     plt.xticks(rotation=30, ha='right')
     if ylim:
         plt.ylim(-0.05*ylim,ylim)
+    plt.tight_layout()
     if save_figs and file:
         plt.savefig(f'img/{file}.svg')
 
