@@ -100,6 +100,7 @@ def get_data(area_type, areas, request_dict):
                 break
             except:
                 i +=1
+                print(f'failed {i} times for {area}')
                 continue
 
     joined_data = join_on_date(obtained_dfs)
