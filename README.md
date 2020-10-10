@@ -10,16 +10,19 @@ These visualisations each use a 7-day rolling average to draw attention to the o
 These figures last updated on 04/10/2020.
 
 ### Cases by nation throughout the pandemic
-![Case rate by nation in the UK](new_cases_nations.svg)
+![Case rate by nation in the UK](img\nation_cases.svg)
+
+### Hospital admissions by nation throughout the pandemic
+![Death rate by nation in the UK](img\nation_admissions.svg)
 
 ### Deaths by nation throughout the pandemic
-![Death rate by nation in the UK](new_deaths_nations.svg)
+![Death rate by nation in the UK](img\nation_deaths.svg)
 
 ### Positivity rate by nation throughout the pandemic
-![Positivity rate by nation in the UK](positivity_nations.svg)
+![Positivity rate by nation in the UK](img\nation_positivity.svg)
 
 The y-axis is limited here to a maximum of 0.1, to better visualise the more recent data. This is needed due to a large spike during the first wave of cases, when test availability was more severely limited.
 ### Cases by the upper-tier local authority
-![Case rate by nation in the UK](new_cases_utlas.svg)
+![Case rate by nation in the UK](img\utla_cases.svg)
 
 This displays cases in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. In order to combat this effect the data from the most recent days has been omitted.

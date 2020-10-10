@@ -146,7 +146,7 @@ def get_data_nations(nations, pop_df):
             df['date'] = df['date'].map(date.fromisoformat)
             nation_dfs[nation] = df
         if make_backup:
-            df.to_csv(f'backups\{nation}.csv')
+            df.to_csv(f'backups/{nation}.csv')
     return nation_dfs
 
 # %% 
