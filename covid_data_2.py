@@ -88,7 +88,7 @@ def get_population(area, pop_df):
     return pop_df[pop_df['Name'] == area].reset_index(drop=True).at[0,'Population']
 
 def plot(areas, dfs, feature, title=None, ylim=None, file=None, drop=0):
-    plt.figure()
+    plt.figure(figsize=(7.5,5))
     for area in areas:
         plot_df = dfs[area].dropna(subset=[feature])
         plot_df = plot_df.drop(plot_df.tail(drop).index)
