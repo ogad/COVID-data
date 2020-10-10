@@ -9,9 +9,9 @@ from datetime import date, timedelta
 import statistics as stats
 
 # %% Settings
-make_backup = True # True or false
+make_backup = False # True or false
 use_backup = False # True or false
-save_figs = True
+save_figs = False
 num_days = False # False, or number of days to plot
 positivity_ylim = 0.1
 # To plot different Upper tier local authorities, simply add their name to this list.
@@ -52,6 +52,7 @@ def get_data(area_type, area, request_dict):
         request_structure += f',"{key}":"{value}"'
     request_structure += '}'
     i = 0
+    dataframe = None
     while i < 5:
         try:
             endpoint = (
@@ -70,7 +71,7 @@ def get_data(area_type, area, request_dict):
                 continue
             else:
                 print("moving on...")
-                break
+                raise Exception("Something isn't working obtaining the data!")
     dataframe['date'] = dataframe['date'].map(date.fromisoformat)
     return dataframe
 
@@ -184,3 +185,10 @@ plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions p
 # %%
 utla_dfs = get_data_utlas(utlas, df_populations)
 plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)", drop=2, file='utla_cases')
+
+# %%
+import geopandas as gp 
+
+gdf = gp.read_file('mapping')
+df_geo_utlas = get_data_utlas(gdf['ctyua19nm'], df_populations)
+# %%
