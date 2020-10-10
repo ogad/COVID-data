@@ -96,6 +96,8 @@ def plot(areas, dfs, feature, title=None):
     plt.xlabel('Date')
     if title:
         plt.title(title)
+    plt.xticks(rotation=30, ha='right')
+    plt.grid()
 
 def positivity_rate(df):
     return df['newCases'].astype(float) / df['newTests'].astype(float)
@@ -127,9 +129,21 @@ def get_data_nations(nations, pop_df):
         df['positivity'] = positivity_rate(df)
         df['positivity7Day'] = rolling_average(df['positivity'], 7)
         nation_dfs[nation] = df
-        print(nation)
-        print(df['newTests'].tail())
     return nation_dfs
+
+# %% 
+def get_data_utlas(utlas, pop_df, drop=2):
+    utla_dfs = {}
+    utla_features = {
+        "newCases":"newCasesBySpecimenDate"
+    }
+    for utla in utlas:
+        df = get_data('utla', utla, utla_features)
+        pop = get_population(utla, pop_df)
+        df['newCasesPerMillion'] = per_million(df['newCases'], pop)
+        df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
+        utla_dfs[utla] = df.drop(df.tail(drop).index)
+    return utla_dfs
 
 # %%
 
@@ -141,4 +155,7 @@ plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Millio
 plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)")
 
 
+# %%
+utla_dfs = get_data_utlas(utlas, df_populations)
+plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)")
 # %%
