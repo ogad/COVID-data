@@ -191,7 +191,7 @@ def dict_to_col(key, dict):
         return None
 
 # %% Mapping function for a single date
-def map_date(gdf, df_geo_utlas, date_to_plot, range=None, feature='Cases'):
+def map_date(gdf, df_geo_utlas, date_to_plot, ax, range=None, feature='Cases'):
     newFeatureDate = {}
     for utla in gdf['ctyua19nm']:
         if df_geo_utlas[utla] is not None:
@@ -200,12 +200,12 @@ def map_date(gdf, df_geo_utlas, date_to_plot, range=None, feature='Cases'):
             newFeatureDate[utla] = None
     gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newFeatureDate))
     if range is None:
-        fig = gdf.plot(column=f'new{feature}{date_to_plot}', legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'})
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'})
     else:
-        fig = gdf.plot(column=f'new{feature}{date_to_plot}', legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
-    fig.axis('off')
-    fig.set_title(f"New Cases on {date_to_plot}")
-    return fig
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
+    ax.axis('off')
+    ax.set_title(f"New Cases per Million on {date_to_plot}")
+    return ax
 # %% Get data and make plots for nations
 nations = ['ENGLAND', 'SCOTLAND', 'WALES', 'NORTHERN IRELAND']
 df_populations = read_populations('populationestimates2020.csv')
@@ -222,6 +222,24 @@ plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 
 # %% Get the data for mapping
 gdf, df_geo_utlas = get_geo_data()
 # %% Map some data
-map_date(gdf, df_geo_utlas, '2020-10-01', range=(0,400))
+fig, ax = plt.subplots()
+map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 
+# %%
+map_days = 200
+dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
+make_images = False
+if make_images:
+    for day in dates:
+        date_str = day.strftime('%Y-%m-%d')
+        fig, ax = plt.subplots(figsize=(8,12))
+        map_date(gdf, df_geo_utlas, date_str, ax, range=(0,500))
+        fig.savefig(f'img/maps/{date_str}', dpi=200)
+# %%
+import imageio
+images = []
+filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates]
+for filename in filenames:
+    images.append(imageio.imread(filename))
+imageio.mimsave('img/map_gif.gif', images)
 # %%
