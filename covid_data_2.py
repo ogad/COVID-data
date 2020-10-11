@@ -159,11 +159,15 @@ def get_data_utlas(utlas, pop_df):
     }
     for utla in utlas:
         if not use_backup:
-            df = get_data('utla', utla, utla_features)
-            pop = get_population(utla, pop_df)
-            df['newCasesPerMillion'] = per_million(df['newCases'], pop)
-            df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
-            utla_dfs[utla] = df
+            try:
+                df = get_data('utla', utla, utla_features)
+                pop = get_population(utla, pop_df)
+                df['newCasesPerMillion'] = per_million(df['newCases'], pop)
+                df['newCasesPerMillion7Day'] = rolling_average(df['newCasesPerMillion'],7)
+                utla_dfs[utla] = df
+            except:
+                print(f"problem with {utla}")
+                utla_dfs[utla] = None
         else:
             df = pd.read_csv(f'backups/{utla}.csv')
             df['date'] = df['date'].map(date.fromisoformat)
@@ -189,6 +193,32 @@ plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 
 # %%
 import geopandas as gp 
 
-gdf = gp.read_file('mapping')
-df_geo_utlas = get_data_utlas(gdf['ctyua19nm'], df_populations)
+def get_geo_data():
+    gdf = gp.read_file('mapping')
+    df_geo_utlas = get_data_utlas(gdf['ctyua19nm'], df_populations)
+    return (gdf, df_geo_utlas)
+
+def dict_to_col(key, dict):
+    try:
+        return dict[key].tolist()[0]
+    except:
+        return None
+
 # %%
+
+def map_date(gdf, df_geo_utlas, date_to_plot):
+    newCasesDate = {}
+    for utla in gdf['ctyua19nm']:
+        if df_geo_utlas[utla] is not None:
+            newCasesDate[utla] = df_geo_utlas[utla][df_geo_utlas[utla]['date'] == date.fromisoformat(date_to_plot)]['newCasesPerMillion7Day']
+        else:
+            newCasesDate[utla] = None
+
+    gdf[f'newCases{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newCasesDate))
+
+    fig, ax = plt.subplots(1, 1)
+    gdf.plot(column=f'newCases{date_to_plot}', ax=ax, legend=True, cmap='Reds', edgecolor='black', missing_kwds={'color':'lightgrey'})
+# %%
+gdf, df_geo_utlas = get_geo_data()
+# %%
+map_date('2020-08-22')
