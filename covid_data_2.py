@@ -206,19 +206,25 @@ def dict_to_col(key, dict):
 
 # %%
 
-def map_date(gdf, df_geo_utlas, date_to_plot):
-    newCasesDate = {}
+def map_date(gdf, df_geo_utlas, date_to_plot, range=None, feature='Cases'):
+    newFeatureDate = {}
     for utla in gdf['ctyua19nm']:
         if df_geo_utlas[utla] is not None:
-            newCasesDate[utla] = df_geo_utlas[utla][df_geo_utlas[utla]['date'] == date.fromisoformat(date_to_plot)]['newCasesPerMillion7Day']
+            newFeatureDate[utla] = df_geo_utlas[utla][df_geo_utlas[utla]['date'] == date.fromisoformat(date_to_plot)][f'new{feature}PerMillion7Day']
         else:
-            newCasesDate[utla] = None
+            newFeatureDate[utla] = None
 
-    gdf[f'newCases{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newCasesDate))
+    gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newFeatureDate))
 
     fig, ax = plt.subplots(1, 1)
-    gdf.plot(column=f'newCases{date_to_plot}', ax=ax, legend=True, cmap='Reds', edgecolor='black', missing_kwds={'color':'lightgrey'})
+    if range is None:
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='Reds', edgecolor='black', missing_kwds={'color':'lightgrey'})
+    else:
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='Reds', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
+    ax.set_xticks([])
+    ax.set_yticks([])
 # %%
 gdf, df_geo_utlas = get_geo_data()
 # %%
-map_date(gdf, df_geo_utlas, '2020-08-22')
+map_date(gdf, df_geo_utlas, '2020-04-01', range=(0,200))
+# %%
