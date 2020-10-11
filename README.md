@@ -28,5 +28,7 @@ The y-axis is limited here to a maximum of 0.1, to better visualise the more rec
 
 This displays cases in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. In order to combat this effect the data from the most recent days has been omitted.
 
+## Map of confirmed cases by upper-tier local authority
+![The cases per million at each upper-tier local authority (gif).]{img/map_gif.gif}
 
 Images last updated 10-10-2020.
