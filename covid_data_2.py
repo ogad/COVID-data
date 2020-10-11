@@ -221,4 +221,4 @@ def map_date(gdf, df_geo_utlas, date_to_plot):
 # %%
 gdf, df_geo_utlas = get_geo_data()
 # %%
-map_date('2020-08-22')
+map_date(gdf, df_geo_utlas, '2020-08-22')
