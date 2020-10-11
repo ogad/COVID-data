@@ -228,7 +228,7 @@ map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 # %%
 map_days = 200
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
-make_images = True
+make_images = False
 if make_images:
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
