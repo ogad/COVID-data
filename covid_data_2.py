@@ -7,6 +7,7 @@ import pandas as pd
 from random import sample
 from datetime import date, timedelta
 import statistics as stats
+import geopandas as gp 
 
 # %% Settings
 make_backup = False # True or false
@@ -176,23 +177,7 @@ def get_data_utlas(utlas, pop_df):
             df.to_csv(f'backups/{utla}.csv')
     return utla_dfs
 
-# %%
-
-nations = ['ENGLAND', 'SCOTLAND', 'WALES', 'NORTHERN IRELAND']
-df_populations = read_populations('populationestimates2020.csv')
-nation_dfs = get_data_nations(nations, df_populations)
-plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)", file='nation_deaths')
-plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)", file='nation_cases')
-plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1, file='nation_positivity')
-plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions per Million (7 day rolling)", drop=2, file='nation_admissions')
-
-# %%
-utla_dfs = get_data_utlas(utlas, df_populations)
-plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)", drop=2, file='utla_cases')
-
-# %%
-import geopandas as gp 
-
+# %% Mapping helper functions: Get Data and mapping a dictionary into a dataframe based on a column
 def get_geo_data():
     gdf = gp.read_file('mapping')
     df_geo_utlas = get_data_utlas(gdf['ctyua19nm'], df_populations)
@@ -204,8 +189,7 @@ def dict_to_col(key, dict):
     except:
         return None
 
-# %%
-
+# %% Mapping function for a single date
 def map_date(gdf, df_geo_utlas, date_to_plot, range=None, feature='Cases'):
     newFeatureDate = {}
     for utla in gdf['ctyua19nm']:
@@ -223,8 +207,22 @@ def map_date(gdf, df_geo_utlas, date_to_plot, range=None, feature='Cases'):
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='Reds', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
     ax.set_xticks([])
     ax.set_yticks([])
-# %%
+    plt.title(f"New Cases on {date_to_plot}")
+    plt.show()
+# %% Get data and make plots for nations
+nations = ['ENGLAND', 'SCOTLAND', 'WALES', 'NORTHERN IRELAND']
+df_populations = read_populations('populationestimates2020.csv')
+nation_dfs = get_data_nations(nations, df_populations)
+plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Cases per Million (7 day rolling)", file='nation_deaths')
+plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Deaths per Million (7 day rolling)", file='nation_cases')
+plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1, file='nation_positivity')
+plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions per Million (7 day rolling)", drop=2, file='nation_admissions')
+
+# %% Get data and plot for a list of Upper-Tier Local Authorities
+utla_dfs = get_data_utlas(utlas, df_populations)
+plot(utlas, utla_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)", drop=2, file='utla_cases')
+
+# %% Get the data for mapping
 gdf, df_geo_utlas = get_geo_data()
-# %%
+# %% Map some data
 map_date(gdf, df_geo_utlas, '2020-04-01', range=(0,200))
-# %%
