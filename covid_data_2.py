@@ -226,20 +226,24 @@ fig, ax = plt.subplots()
 map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 
 # %%
-map_days = 200
+map_days = 20
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
-make_images = False
+make_images = True
 if make_images:
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
         fig, ax = plt.subplots(figsize=(8,12))
         map_date(gdf, df_geo_utlas, date_str, ax, range=(0,500))
-        fig.savefig(f'img/maps/{date_str}', dpi=200)
+        fig.savefig(f'img/maps/{date_str}', dpi=150)
+        plt.close()
 # %%
 import imageio
 images = []
-filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates]
+filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates[:-2]]
 for filename in filenames:
     images.append(imageio.imread(filename))
+for i in range(20):
+    images.append(images[-1])
+
 imageio.mimsave('img/map_gif.gif', images)
 # %%
