@@ -31,4 +31,4 @@ This displays cases in a small number of local authorities. Here the cases are b
 ## Map of confirmed cases by upper-tier local authority
 ![The cases per million at each upper-tier local authority (gif).](img/map_gif.gif)
 
-Images last updated 10-10-2020.
+Images last updated 11-10-2020.
