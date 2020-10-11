@@ -226,7 +226,7 @@ fig, ax = plt.subplots()
 map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 
 # %%
-map_days = 220
+map_days = 200
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
 make_images = True
 if make_images:
