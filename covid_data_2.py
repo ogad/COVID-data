@@ -11,11 +11,11 @@ import statistics as stats
 import geopandas as gp 
 
 # %% Settings
-make_backup = False # True or false
+make_backup = True # True or false
 use_backup = False # True or false
-save_figs = False
+save_figs = True
 num_days = False # False, or number of days to plot
-positivity_ylim = 0.1
+positivity_ylim = 0.15
 # To plot different Upper tier local authorities, simply add their name to this list.
 # If more than 10, will plot a random sample of 5 of these.
 # If False, will take a random sample of all the UTLAs; will retrieve data from all UTLAs
@@ -212,7 +212,7 @@ df_populations = read_populations('populationestimates2020.csv')
 nation_dfs = get_data_nations(nations, df_populations)
 plot(nations, nation_dfs, 'newCasesPerMillion7Day', title="New Cases per Million (7 day rolling)", file='nation_deaths')
 plot(nations, nation_dfs, 'newDeathsPerMillion7Day', title="New Deaths per Million (7 day rolling)", file='nation_cases')
-plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=0.1, file='nation_positivity')
+plot(nations, nation_dfs, 'positivity7Day', title="Positivity rate (7 day rolling)", ylim=positivity_ylim, file='nation_positivity')
 plot(nations, nation_dfs, 'newAdmissionsPerMillion7Day', title="New admissions per Million (7 day rolling)", drop=2, file='nation_admissions')
 
 # %% Get data and plot for a list of Upper-Tier Local Authorities
@@ -228,12 +228,12 @@ map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 # %%
 map_days = 200
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
-make_images = False
+make_images = True
 if make_images:
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
         fig, ax = plt.subplots(figsize=(8,12))
-        map_date(gdf, df_geo_utlas, date_str, ax, range=(0,500))
+        map_date(gdf, df_geo_utlas, date_str, ax, range=(0,700))
         fig.savefig(f'img/maps/{date_str}', dpi=150)
         plt.close()
 # %%

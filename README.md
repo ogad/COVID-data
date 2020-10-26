@@ -32,4 +32,4 @@ This displays cases in a small number of local authorities. Here the cases are b
 ![The cases per million at each upper-tier local authority (gif).](img/map_gif.gif)
 This gif displays the most recent 200 days of COVID-19 data.
 
-Images last updated 11-10-2020.
+Images last updated 26-10-2020.
