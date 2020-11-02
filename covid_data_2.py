@@ -15,7 +15,7 @@ make_backup = True # True or false
 use_backup = False # True or false
 save_figs = True
 num_days = False # False, or number of days to plot
-positivity_ylim = 0.15
+positivity_ylim = 0.4
 # To plot different Upper tier local authorities, simply add their name to this list.
 # If more than 10, will plot a random sample of 5 of these.
 # If False, will take a random sample of all the UTLAs; will retrieve data from all UTLAs
@@ -181,6 +181,7 @@ def get_data_utlas(utlas, pop_df):
 # %% Mapping helper functions: Get Data and mapping a dictionary into a dataframe based on a column
 def get_geo_data():
     gdf = gp.read_file('mapping')
+    gdf.replace({'City of Edinburgh':'Edinburgh (City of)','Na h-Eileanan Siar':'Comhairle nan Eilean Siar'}, inplace=True)
     df_geo_utlas = get_data_utlas(gdf['ctyua19nm'], df_populations)
     return (gdf, df_geo_utlas)
 
@@ -226,7 +227,7 @@ fig, ax = plt.subplots()
 map_date(gdf, df_geo_utlas, '2020-10-01', ax, range=(0,400))
 
 # %%
-map_days = 200
+map_days = 300
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
 make_images = True
 if make_images:
