@@ -54,10 +54,17 @@ def calc_rolling_mean(df_la, win_size=7):
     return df_la.sort_values('date').rolling("7D", on='date').mean()
 
 def get_la_rolling(df, la_code):
-    df_la = df[df.areaCode == utla_code]
+    df_la = df[df.areaCode == la_code]
     df_la_rolling = calc_rolling_mean(df_la)
-    df_utla_rolling['areaCode'] = la_code
+    df_la_rolling['areaCode'] = la_code
     return df_la_rolling
+
+def make_rolling(df):
+    codes = df['areaCode'].unique()
+    rolling_dfs = [get_la_rolling(df, code) for code in codes]
+    df_rolling = pd.concat(rolling_dfs)
+    df = df.merge(df_rolling, on=['date', 'areaCode', 'pop'], suffixes=('','Rolling'))
+    return df
 
 
 # %% Get data
@@ -77,10 +84,7 @@ utlas = [
 ]
 df_utlas = df[df.areaName.isin(utlas)]
 
-codes = df_utlas['areaCode'].unique()
-utla_rolling_dfs = [get_la_rolling(df_utlas, code) for code in codes]
-df_utlas_rolling = pd.concat(utla_rolling_dfs)
-df_utlas = df.merge(df_utlas_rolling, on=['date', 'areaCode'], suffixes=('','Rolling'))
+df_utlas = make_rolling(df_utlas)
 
 sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName',data=df_utlas)
 # %%
