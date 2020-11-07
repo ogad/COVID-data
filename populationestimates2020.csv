@@ -1,4 +1,4 @@
-# Population estimates for the UK: ONS Published 24 June 2020
+# Population estimates for the UK: ONS Published 24 June 2020,,,
 Code,Name,Geography1,All ages
 K02000001,UNITED KINGDOM,Country,"66,796,807"
 K03000001,GREAT BRITAIN,Country,"64,903,140"
@@ -266,7 +266,11 @@ E06000045,Southampton,Unitary Authority,"252,520"
 E06000037,West Berkshire,Unitary Authority,"158,450"
 E06000040,Windsor and Maidenhead,Unitary Authority,"151,422"
 E06000041,Wokingham,Unitary Authority,"171,119"
-E06000060,Buckinghamshire,Unitary Authority,"543,973"
+E10000002,Buckinghamshire,County,"543,973"
+E07000004,Aylesbury Vale,Non-metropolitan District,"203,219"
+E07000005,Chiltern,Non-metropolitan District,"96,046"
+E07000006,South Bucks,Non-metropolitan District,"70,440"
+E07000007,Wycombe,Non-metropolitan District,"174,268"
 E10000011,East Sussex,County,"557,229"
 E07000061,Eastbourne,Non-metropolitan District,"103,745"
 E07000062,Hastings,Non-metropolitan District,"92,661"

@@ -1,4 +1,11 @@
 # %%
+import pandas as pd
+from requests import get
+from datetime import date
+import seaborn as sns
+from statistics import mean
+
+# %%
 def get_response(url):
     """Perform a http GET request at the given url, 
     returning the response json."""
@@ -36,19 +43,68 @@ def get_data(area_type, area, request_dict):
     dataframe['date'] = dataframe['date'].map(date.fromisoformat)
     return dataframe
 
+def read_populations(file):
+    df = pd.read_csv(file, header=1)
+    df['Population'] = df['All ages']\
+        .replace(',','',regex=True).fillna(0).astype(int)
+    df.drop(columns='All ages', inplace=True)
+    return df
+
+# %%
+df_pops = read_populations('populationestimates2020.csv')
+pop_dict = df_pops.set_index('Code').to_dict()['Population']
+
+# %%
+
 dataframes = []
-for p in range(1,22):
+p=0
+while True:
+    p += 1
     endpoint = (
         'https://api.coronavirus.data.gov.uk/v1/data?'
         'filters=areaType=utla&'
-        'structure={"date": "date", "areaName":"areaName", "newCases":"newCasesBySpecimenDate"}&'
+        'structure={"date": "date", "areaName":"areaName", "areaCode":"areaCode", "newCases":"newCasesBySpecimenDate"}&'
         f'page={p}'
     )
-    response_json = get_response(endpoint)
+    try:
+        response_json = get_response(endpoint)
+    except:
+        break
     dataframe = pd.DataFrame(response_json['data']).sort_values('date')\
         .reset_index(drop=True)
     dataframes.append(dataframe)
 df = pd.concat(dataframes)
+
 # %%
-df = df.pivot(columns='areaName',index='date',values='newCases')
+df['date'] = pd.to_datetime(df['date'])
+df['pop'] = [pop_dict[code] for code in df['areaCode']]
+df['newCasesPerMillion'] = df['newCases'] / (df['pop']/10.0**6)
+# %%
+utlas = [
+    'Cheshire West and Chester',
+    'Leicester',
+    'Northumberland',
+    'North Yorkshire'
+]
+df_utlas = df[df.areaName.isin(utlas)]
+
+def calc_rolling_mean(df, win_size=7):
+    if len(df.areaName.unique()) != 1:
+        raise Exception('df needs to have only one area type')
+    return df.sort_values('date').rolling(win_size, on='date').mean()
+
+def get_la_rolling(df, utla_code):
+    df_la = df[df.areaCode == utla_code]
+    return calc_rolling_mean(df_la)
+
+codes = df_utlas['areaCode'].unique()
+utla_rolling_dfs = []
+for code in codes:
+    df_utla_rolling = get_la_rolling(df_utlas, code)
+    df_utla_rolling['areaCode'] = code
+    utla_rolling_dfs.append(df_utla_rolling)
+df_utlas_rolling = pd.concat(utla_rolling_dfs)
+df_utlas = df.merge(df_utlas_rolling, on=['date', 'areaCode'], suffixes=('','Rolling'))
+
+sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName',data=df_utlas)
 # %%
