@@ -4,6 +4,8 @@ from requests import get
 from datetime import date
 import seaborn as sns
 from statistics import mean
+import matplotlib.pyplot as plt
+import geopandas as gpd
 
 # %% Function defs
 def get_response(url):
@@ -41,7 +43,10 @@ def get_data(area_type, structure_items):
         dataframes.append(dataframe)
     df = pd.concat(dataframes)
     df['date'] = pd.to_datetime(df['date'])
-    df['pop'] = [pop_dict[code] for code in df['areaCode']]
+    try:
+        df['pop'] = [pop_dict[code] for code in df['areaCode']]
+    except:
+        pass
     return df
 
 def add_per_mill(df, item):
@@ -71,10 +76,10 @@ def make_rolling(df):
 df_pops = read_populations('populationestimates2020.csv')
 pop_dict = df_pops.set_index('Code').to_dict()['Population']
 
+# %% Graphing
 df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
 df = add_per_mill(df,'newCases')
-
-# %% Graphing
+df = make_rolling(df)
 utlas = [
     'Cheshire West and Chester',
     'Leicester',
@@ -84,7 +89,58 @@ utlas = [
 ]
 df_utlas = df[df.areaName.isin(utlas)]
 
-df_utlas = make_rolling(df_utlas)
-
 sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName',data=df_utlas)
+plt.xticks(rotation=30, ha='right')
+
 # %%
+def get_geo_data():
+    gdf = gpd.read_file('mapping')
+    # gdf.replace({'City of Edinburgh':'Edinburgh (City of)','Na h-Eileanan Siar':'Comhairle nan Eilean Siar'}, inplace=True)
+    return gdf
+
+def dict_to_col(key, dict):
+    try:
+        return dict[key].tolist()[0]
+    except:
+        return None
+
+def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
+    newFeatureDate = {}
+    for utla in gdf['ctyua19nm']:
+        if df[df['areaName'] == utla] is not None:
+            df_utla = df[df['areaName']==utla]
+            df_utla = df_utla[df_utla['date'] == pd.Timestamp(date_to_plot)]
+            newFeatureDate[utla] = df_utla[f'new{feature}PerMillionRolling']
+        else:
+            newFeatureDate[utla] = None
+    gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newFeatureDate))
+    if range is None:
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'})
+    else:
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
+    ax.axis('off')
+    ax.set_title(f"New Cases per Million on {date_to_plot}")
+    return ax
+
+gdf = get_geo_data()
+fig, ax = plt.subplots(figsize = (10, 15))
+map_date(gdf, df, '2020-11-01', ax)
+
+# %%
+df = get_data("nation", '"newCases":"newCasesByPublishDate", "newDeaths":"newDeaths28DaysByPublishDate"')
+df = add_per_mill(df,'newCases')
+df = add_per_mill(df,'newDeaths')
+nations = list(df.areaName.unique())
+df = make_rolling(df)
+plt.figure()
+sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName', data=df)
+plt.xticks(rotation=30, ha='right')
+plt.figure()
+sns.lineplot(x='date',y='newDeathsPerMillionRolling', hue='areaName', data=df)
+plt.xticks(rotation=30, ha='right')
+
+# %%
+df = get_data("nhsRegion", '"newAdmissions":"newAdmissions"')
+df = add_per_mill(df,'newAdmissions')
+df = make_rolling(df)
+sns.lineplot(x='date',y='newAdmissionsPerMillionRolling', hue='areaName', data=df)
