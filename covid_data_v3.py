@@ -172,16 +172,19 @@ gdf = get_geo_data()
 fig, ax = plt.subplots(figsize = (10, 15))
 map_date(gdf, df, '2020-11-01', ax)
 # %%
+df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
+df = add_per_mill(df,'newCases')
+df = make_rolling(df)
 map_days = 250
 dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
 make_images = True
 if make_images:
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
-        fig, ax = plt.subplots(figsize=(8,12))
+        fig, ax = plt.subplots(figsize=(6,9))
         map_date(gdf, df, date_str, ax, range=(0,700))
         fig.savefig(f'img/maps/{date_str}', dpi=150)
-        plt.close()]
+        plt.close()
 
 images = []
 filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates[:-2]]
@@ -192,3 +195,5 @@ for i in range(20):
 
 imageio.mimsave('img/map_gif.gif', images)
 
+
+# %%
