@@ -26,6 +26,7 @@ This displays cases in a small number of local authorities. Here the cases are b
 
 ## Map of confirmed cases by the upper-tier local authority
 ![The cases per million at each upper-tier local authority (gif).](img/map_gif.gif)
-This gif displays the most recent 250 days of COVID-19 data.
+This gif displays the most recent 250 days of COVID-19 data for local authorities in the UK.
+Areas are grey where/when data is not available.
 
 Images last updated 09-11-2020.
