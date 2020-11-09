@@ -1,7 +1,7 @@
 # %%
 import pandas as pd
 from requests import get
-from datetime import date
+from datetime import date, timedelta
 import seaborn as sns
 from statistics import mean
 import matplotlib.pyplot as plt
@@ -125,6 +125,27 @@ def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
 gdf = get_geo_data()
 fig, ax = plt.subplots(figsize = (10, 15))
 map_date(gdf, df, '2020-11-01', ax)
+# %%
+map_days = 250
+dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
+make_images = True
+if make_images:
+    for day in dates:
+        date_str = day.strftime('%Y-%m-%d')
+        fig, ax = plt.subplots(figsize=(8,12))
+        map_date(gdf, df, date_str, ax, range=(0,700))
+        fig.savefig(f'img/maps/{date_str}', dpi=150)
+        plt.close()
+# %%
+import imageio
+images = []
+filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates[:-2]]
+for filename in filenames:
+    images.append(imageio.imread(filename))
+for i in range(20):
+    images.append(images[-1])
+
+imageio.mimsave('img/map_gif.gif', images)
 
 # %%
 df = get_data("nation", '"newCases":"newCasesByPublishDate", "newDeaths":"newDeaths28DaysByPublishDate"')
