@@ -6,6 +6,7 @@ import seaborn as sns
 from statistics import mean
 import matplotlib.pyplot as plt
 import geopandas as gpd
+import imageio
 
 # %% Function defs
 def get_response(url):
@@ -91,6 +92,49 @@ df_utlas = df[df.areaName.isin(utlas)]
 
 sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName',data=df_utlas)
 plt.xticks(rotation=30, ha='right')
+plt.title('New cases per million people by UTLA (7 day rolling)')
+plt.ylabel("New cases per million population")
+plt.xlabel("Date")
+plt.legend(title = "Upper-tier local authority")
+plt.tight_layout()
+plt.savefig("img/utla_cases.svg")
+# %%
+df = get_data("nation", '"newCases":"newCasesByPublishDate", "newDeaths":"newDeaths28DaysByPublishDate"')
+df = add_per_mill(df,'newCases')
+df = add_per_mill(df,'newDeaths')
+nations = list(df.areaName.unique())
+df = make_rolling(df)
+plt.figure()
+sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName', data=df)
+plt.xticks(rotation=30, ha='right')
+plt.title('New cases per million people by Nation (7 day rolling)')
+plt.ylabel("New cases per million population")
+plt.xlabel("Date")
+plt.legend(title = "Nation")
+plt.tight_layout()
+plt.savefig("img/nation_cases.svg")
+
+plt.figure()
+sns.lineplot(x='date',y='newDeathsPerMillionRolling', hue='areaName', data=df)
+plt.xticks(rotation=30, ha='right')
+plt.title('New deaths per million people by Nation (7 day rolling)')
+plt.ylabel("New deaths per million population")
+plt.xlabel("Date")
+plt.legend(title = "Nation")
+plt.tight_layout()
+plt.savefig("img/nation_deaths.svg")
+
+# %%
+df = get_data("nhsRegion", '"newAdmissions":"newAdmissions"')
+df = add_per_mill(df,'newAdmissions')
+df = make_rolling(df)
+sns.lineplot(x='date',y='newAdmissionsPerMillionRolling', hue='areaName', data=df)
+plt.title('New admissions per million people by NHS region (7 day rolling)')
+plt.ylabel("New admissions per million population")
+plt.xlabel("Date")
+plt.legend(title = "NHS region")
+plt.tight_layout()
+plt.savefig("img/nhs_admissions.svg")
 
 # %%
 def get_geo_data():
@@ -135,9 +179,8 @@ if make_images:
         fig, ax = plt.subplots(figsize=(8,12))
         map_date(gdf, df, date_str, ax, range=(0,700))
         fig.savefig(f'img/maps/{date_str}', dpi=150)
-        plt.close()
-# %%
-import imageio
+        plt.close()]
+
 images = []
 filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates[:-2]]
 for filename in filenames:
@@ -147,21 +190,3 @@ for i in range(20):
 
 imageio.mimsave('img/map_gif.gif', images)
 
-# %%
-df = get_data("nation", '"newCases":"newCasesByPublishDate", "newDeaths":"newDeaths28DaysByPublishDate"')
-df = add_per_mill(df,'newCases')
-df = add_per_mill(df,'newDeaths')
-nations = list(df.areaName.unique())
-df = make_rolling(df)
-plt.figure()
-sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName', data=df)
-plt.xticks(rotation=30, ha='right')
-plt.figure()
-sns.lineplot(x='date',y='newDeathsPerMillionRolling', hue='areaName', data=df)
-plt.xticks(rotation=30, ha='right')
-
-# %%
-df = get_data("nhsRegion", '"newAdmissions":"newAdmissions"')
-df = add_per_mill(df,'newAdmissions')
-df = make_rolling(df)
-sns.lineplot(x='date',y='newAdmissionsPerMillionRolling', hue='areaName', data=df)
