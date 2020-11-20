@@ -161,29 +161,32 @@ def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
             newFeatureDate[utla] = None
     gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newFeatureDate))
     if range is None:
-        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'})
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'})
     else:
-        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
     ax.axis('off')
     ax.set_title(f"New Cases per Million on {date_to_plot}")
     return ax
 
+df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
+df = add_per_mill(df,'newCases')
+df = make_rolling(df)
 gdf = get_geo_data()
-fig, ax = plt.subplots(figsize = (10, 15))
+fig, ax = plt.subplots(figsize = (3, 4.5))
 map_date(gdf, df, '2020-11-01', ax)
 # %%
 df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
 df = add_per_mill(df,'newCases')
 df = make_rolling(df)
 map_days = 250
-dates = [date.today() - timedelta(map_days - x) for x in range(map_days)]
+dates = [date.today() - timedelta(2 + map_days - x) for x in range(map_days)]
 make_images = True
 if make_images:
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
-        fig, ax = plt.subplots(figsize=(6,9))
+        fig, ax = plt.subplots(figsize=(3,4.5))
         map_date(gdf, df, date_str, ax, range=(0,700))
-        fig.savefig(f'img/maps/{date_str}', dpi=150)
+        fig.savefig(f'img/maps/{date_str}', dpi=300)
         plt.close()
 
 images = []
