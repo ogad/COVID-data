@@ -18,6 +18,7 @@ def get_response(url):
     return response.json()
 
 def read_populations(file):
+    """Read populations into a """
     df = pd.read_csv(file, header=1)
     df['Population'] = df['All ages']\
         .replace(',','',regex=True).fillna(0).astype(int)
@@ -139,10 +140,10 @@ plt.tight_layout()
 plt.savefig("img/nhs_admissions.svg")
 
 # %%
-def get_geo_data():
-    gdf = gpd.read_file('mapping')
-    # gdf.replace({'City of Edinburgh':'Edinburgh (City of)','Na h-Eileanan Siar':'Comhairle nan Eilean Siar'}, inplace=True)
-    return gdf
+# def get_geo_data():
+#     gdf = gpd.read_file('mapping')
+#     # gdf.replace({'City of Edinburgh':'Edinburgh (City of)','Na h-Eileanan Siar':'Comhairle nan Eilean Siar'}, inplace=True)
+#     return gdf
 
 def dict_to_col(key, dict):
     try:
@@ -150,62 +151,73 @@ def dict_to_col(key, dict):
     except:
         return None
 
-def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
+def map_date(gdf, df, area_type, date_to_plot, ax, range=None, feature='Cases'):
+    code_column = {
+        'utla': 'ctyua19cd',
+        'nhsRegion': 'nhser20cd'
+    }
     newFeatureDate = {}
-    for code in gdf['ctyua19cd']:
+    for code in gdf[code_column[area_type]]:
         if df[df['areaCode'] == code] is not None:
             df_utla = df[df['areaCode']==code]
             df_utla = df_utla[df_utla['date'] == pd.Timestamp(date_to_plot)]
             newFeatureDate[code] = df_utla[f'new{feature}PerMillionRolling']
         else:
             newFeatureDate[code] = None
-    gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19cd'].map(lambda x : dict_to_col(x, newFeatureDate))
+    gdf[f'new{feature}{date_to_plot}'] = gdf[code_column[area_type]].map(lambda x : dict_to_col(x, newFeatureDate))
     if range is None:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'})
     else:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
     ax.axis('off')
-    ax.set_title(f"Cases per million - {date_to_plot}")
+    ax.set_title(f"{feature} per million - {date_to_plot}")
     return ax
 
-df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
-df = add_per_mill(df,'newCases')
-df = make_rolling(df)
-gdf = get_geo_data()
-fig, ax = plt.subplots(figsize = (3, 4.5))
-map_date(gdf, df, '2020-11-01', ax)
 # %%
-df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
-df = add_per_mill(df,'newCases')
-df = make_rolling(df)
-map_days = 250
-dates = [date.today() - timedelta(2 + map_days - x) for x in range(map_days)]
+def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=False):
+    structure_dict = {
+        'newCases' : '"newCases":"newCasesBySpecimenDate"',
+        'newAdmissions': '"newAdmissions": "newAdmissions"'
+    }
+    feature_dict = {
+        'newCases' : 'Cases',
+        'newAdmissions': 'Admissions'
+    }
+    gdf = gpd.read_file(shapefile)
+    df = get_data(area_type, structure_dict[metric])
+    df = add_per_mill(df,metric)
+    df = make_rolling(df)
+    dates = [date.today() - timedelta(remove_days + num_days - x) for x in range(num_days)]
+    max_val = df[f'{metric}PerMillionRolling'].max()
 
-make_images = True
-images = []
-for day in dates:
-    date_str = day.strftime('%Y-%m-%d')
-    filename = f'img/maps/{date_str}.png'
-    if make_images:
-        fig, ax = plt.subplots(figsize=(4,6))
-        map_date(gdf, df, date_str, ax, range=(0,700))
-        fig.savefig(f'img/maps/{date_str}', dpi=300)
-        plt.close()
-        images.append(imageio.imread(filename))
-    else:
-        try:
-            images.append(imageio.imread(filename))
-        except:
-            fig, ax = plt.subplots(figsize=(3,4.5))
-            map_date(gdf, df, date_str, ax, range=(0,700))
-            fig.savefig(f'img/maps/{date_str}', dpi=300)
+
+    images = []
+    for day in dates:
+        date_str = day.strftime('%Y-%m-%d')
+        filename = f'img/maps/{date_str}_{area_type}_{metric}_{max_val}.png'
+        if make_images:
+            fig, ax = plt.subplots(figsize=(4,6))
+            map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+            fig.savefig(filename, dpi=300)
             plt.close()
             images.append(imageio.imread(filename))
+        else:
+            try:
+                images.append(imageio.imread(filename))
+            except:
+                fig, ax = plt.subplots(figsize=(4,6))
+                map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+                fig.savefig(filename, dpi=300)
+                plt.close()
+                images.append(imageio.imread(filename))
 
-for i in range(20):
-    images.append(images[-1])
+    for _ in range(20):
+        images.append(images[-1])
 
-imageio.mimsave('img/map_gif.gif', images)
+    imageio.mimsave(f'img/map_gif_{area_type}_{metric}.gif', images)
 
+if __name__ == "__main__":
+    make_gif('mapping','utla','newCases', 250)
+    make_gif('mapping_nhs','nhsRegion','newAdmissions', 200)
 
 # %%
