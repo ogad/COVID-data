@@ -31,3 +31,4 @@ This gif displays the most recent 250 days of COVID-19 data for local authoritie
 Areas are grey where/when data is not available.
 
 Images last updated 09-11-2020.
+<h1>Heading level 1</h1>
