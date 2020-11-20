@@ -165,7 +165,7 @@ def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
     else:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
     ax.axis('off')
-    ax.set_title(f"New Cases per Million on {date_to_plot}")
+    ax.set_title(f"Cases per million - {date_to_plot}")
     return ax
 
 df = get_data("utla", '"newCases":"newCasesBySpecimenDate"')
@@ -181,13 +181,13 @@ df = make_rolling(df)
 map_days = 250
 dates = [date.today() - timedelta(2 + map_days - x) for x in range(map_days)]
 
-make_images = False
+make_images = True
 images = []
 for day in dates:
     date_str = day.strftime('%Y-%m-%d')
     filename = f'img/maps/{date_str}.png'
     if make_images:
-        fig, ax = plt.subplots(figsize=(3,4.5))
+        fig, ax = plt.subplots(figsize=(4,6))
         map_date(gdf, df, date_str, ax, range=(0,700))
         fig.savefig(f'img/maps/{date_str}', dpi=300)
         plt.close()
