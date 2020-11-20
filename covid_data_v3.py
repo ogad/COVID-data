@@ -152,14 +152,14 @@ def dict_to_col(key, dict):
 
 def map_date(gdf, df, date_to_plot, ax, range=None, feature='Cases'):
     newFeatureDate = {}
-    for utla in gdf['ctyua19nm']:
-        if df[df['areaName'] == utla] is not None:
-            df_utla = df[df['areaName']==utla]
+    for code in gdf['ctyua19cd']:
+        if df[df['areaCode'] == code] is not None:
+            df_utla = df[df['areaCode']==code]
             df_utla = df_utla[df_utla['date'] == pd.Timestamp(date_to_plot)]
-            newFeatureDate[utla] = df_utla[f'new{feature}PerMillionRolling']
+            newFeatureDate[code] = df_utla[f'new{feature}PerMillionRolling']
         else:
-            newFeatureDate[utla] = None
-    gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19nm'].map(lambda x : dict_to_col(x, newFeatureDate))
+            newFeatureDate[code] = None
+    gdf[f'new{feature}{date_to_plot}'] = gdf['ctyua19cd'].map(lambda x : dict_to_col(x, newFeatureDate))
     if range is None:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'})
     else:
@@ -180,19 +180,28 @@ df = add_per_mill(df,'newCases')
 df = make_rolling(df)
 map_days = 250
 dates = [date.today() - timedelta(2 + map_days - x) for x in range(map_days)]
-make_images = True
-if make_images:
-    for day in dates:
-        date_str = day.strftime('%Y-%m-%d')
+
+make_images = False
+images = []
+for day in dates:
+    date_str = day.strftime('%Y-%m-%d')
+    filename = f'img/maps/{date_str}.png'
+    if make_images:
         fig, ax = plt.subplots(figsize=(3,4.5))
         map_date(gdf, df, date_str, ax, range=(0,700))
         fig.savefig(f'img/maps/{date_str}', dpi=300)
         plt.close()
+        images.append(imageio.imread(filename))
+    else:
+        try:
+            images.append(imageio.imread(filename))
+        except:
+            fig, ax = plt.subplots(figsize=(3,4.5))
+            map_date(gdf, df, date_str, ax, range=(0,700))
+            fig.savefig(f'img/maps/{date_str}', dpi=300)
+            plt.close()
+            images.append(imageio.imread(filename))
 
-images = []
-filenames = [f'img/maps/{day.strftime("%Y-%m-%d")}.png' for day in dates[:-2]]
-for filename in filenames:
-    images.append(imageio.imread(filename))
 for i in range(20):
     images.append(images[-1])
 

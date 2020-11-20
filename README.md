@@ -22,11 +22,11 @@ These figures last updated on 04/10/2020.
 ### Cases by the upper-tier local authority
 ![Case rate by nation in the UK](img/utla_cases.svg)
 
-This displays cases in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. In order to combat this effect the data from the most recent days has been omitted.
+This displays cases in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. To combat this effect, the data from the most recent days is omitted.
 
 ## Map of confirmed cases by the upper-tier local authority
+This gif displays the most recent 250 days of COVID-19 data for local authorities in the UK. Note that this is a flawed metric because the capacity for testing has improved significantly over the course of the pandemic.
 ![The cases per million at each upper-tier local authority (gif).](img/map_gif.gif=250x)
-This gif displays the most recent 250 days of COVID-19 data for local authorities in the UK.
 Areas are grey where/when data is not available.
 
 Images last updated 09-11-2020.
