@@ -27,12 +27,15 @@ This displays cases in a small number of local authorities. Here the cases are b
 ## Maps
 ### Map of confirmed cases by the upper-tier local authority
 This gif displays the most recent 250 days of COVID-19 data for local authorities in the UK. Note that this is a flawed metric because the capacity for testing has improved significantly during the pandemic.
-<img src="img/map_gif_utla_newCases.gif" alt="The cases per million, as an animated gif by upper-tier local authority" width=500>
+
 Areas are grey where/when data is not available.
+
+<img src="img/map_gif_utla_newCases.gif" alt="The cases per million, as an animated gif by upper-tier local authority" width=500>
+
 
 ### Map of admissions by NHS region
 This gif displays the most recent 200 days of hospital admissions for NHS regions in England. This is a more consistent indicator of the severity than the testing results, with the caveat that there is a slightly longer delay between catching the disease and being admitted to hospital.
-<img src="img/map_gif_nhsRegion_newAdmissions.gif" alt="The admissions per million, as an animated gif by upper-tier local authority" width=500>
-Areas are grey where/when data is not available.
 
-Images last updated 20-11-2020.
+<img src="img/map_gif_nhsRegion_newAdmissions.gif" alt="The admissions per million, as an animated gif by upper-tier local authority" width=500>
+
+Images last updated 21-11-2020.

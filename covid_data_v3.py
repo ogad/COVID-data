@@ -7,6 +7,7 @@ from statistics import mean
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import imageio
+import contextily as ctx
 
 # %% Function defs
 def get_response(url):
@@ -170,7 +171,7 @@ def map_date(gdf, df, area_type, date_to_plot, ax, range=None, feature='Cases'):
     else:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
     ax.axis('off')
-    ax.set_title(f"{feature} per million - {date_to_plot}")
+    ax.set_title(f"{feature} per million\n{date_to_plot}")
     return ax
 
 # %%
@@ -184,12 +185,12 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
         'newAdmissions': 'Admissions'
     }
     gdf = gpd.read_file(shapefile)
+    gdf = gdf.to_crs(epsg=3857)
     df = get_data(area_type, structure_dict[metric])
     df = add_per_mill(df,metric)
     df = make_rolling(df)
     dates = [date.today() - timedelta(remove_days + num_days - x) for x in range(num_days)]
     max_val = df[f'{metric}PerMillionRolling'].max()
-
 
     images = []
     for day in dates:
@@ -198,6 +199,7 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
         if make_images:
             fig, ax = plt.subplots(figsize=(4,6))
             map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+            ctx.add_basemap(ax, zoom=6, url=ctx.providers.Stamen.TonerBackground)
             fig.savefig(filename, dpi=300)
             plt.close()
             images.append(imageio.imread(filename))
@@ -207,6 +209,7 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
             except:
                 fig, ax = plt.subplots(figsize=(4,6))
                 map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+                ctx.add_basemap(ax, zoom=6, url=ctx.providers.Stamen.TonerBackground)
                 fig.savefig(filename, dpi=300)
                 plt.close()
                 images.append(imageio.imread(filename))
@@ -218,6 +221,6 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
 
 if __name__ == "__main__":
     make_gif('mapping','utla','newCases', 250)
-    make_gif('mapping_nhs','nhsRegion','newAdmissions', 200)
+    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245)
 
 # %%
