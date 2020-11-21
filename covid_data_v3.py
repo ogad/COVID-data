@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import imageio
 import contextily as ctx
+import numpy as np
 
 # %% Function defs
 def get_response(url):
@@ -152,7 +153,7 @@ def dict_to_col(key, dict):
     except:
         return None
 
-def map_date(gdf, df, area_type, date_to_plot, ax, range=None, feature='Cases'):
+def map_date(gdf, df, area_type, date_to_plot, ax, y_limit=None, feature='Cases'):
     code_column = {
         'utla': 'ctyua19cd',
         'nhsRegion': 'nhser20cd'
@@ -166,16 +167,21 @@ def map_date(gdf, df, area_type, date_to_plot, ax, range=None, feature='Cases'):
         else:
             newFeatureDate[code] = None
     gdf[f'new{feature}{date_to_plot}'] = gdf[code_column[area_type]].map(lambda x : dict_to_col(x, newFeatureDate))
-    if range is None:
+    if y_limit is None:
         gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax,legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'})
     else:
-        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=True, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=range[0], vmax=range[1])
+        gdf.plot(column=f'new{feature}{date_to_plot}', ax=ax, legend=False, cmap='YlOrRd', edgecolor='black', lw=.3, missing_kwds={'color':'lightgrey'}, vmin=0, vmax=y_limit)
+        ticks = np.linspace(0,y_limit,6)
+        tick_labels = list(map(lambda x: str(round(x)),ticks))
+        tick_labels[-1] = tick_labels[-1] + '+'
+        cb = plt.colorbar(ax.collections[0], ticks=ticks)
+        cb.ax.set_yticklabels(tick_labels)
     ax.axis('off')
     ax.set_title(f"{feature} per million\n{date_to_plot}")
     return ax
 
 # %%
-def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=False):
+def make_gif(shapefile, area_type, metric, num_days, max_val=None, remove_days=2, make_images=False):
     structure_dict = {
         'newCases' : '"newCases":"newCasesBySpecimenDate"',
         'newAdmissions': '"newAdmissions": "newAdmissions"'
@@ -190,15 +196,15 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
     df = add_per_mill(df,metric)
     df = make_rolling(df)
     dates = [date.today() - timedelta(remove_days + num_days - x) for x in range(num_days)]
-    max_val = df[f'{metric}PerMillionRolling'].max()
-
+    if max_val == None:
+        max_val = df[f'{metric}PerMillionRolling'].max()
     images = []
     for day in dates:
         date_str = day.strftime('%Y-%m-%d')
         filename = f'img/maps/{date_str}_{area_type}_{metric}_{max_val}.png'
         if make_images:
             fig, ax = plt.subplots(figsize=(4,6))
-            map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+            map_date(gdf, df, area_type, date_str, ax, y_limit=max_val, feature=feature_dict[metric])
             ctx.add_basemap(ax, zoom=6, url=ctx.providers.Stamen.TonerBackground)
             fig.savefig(filename, dpi=300)
             plt.close()
@@ -208,7 +214,7 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
                 images.append(imageio.imread(filename))
             except:
                 fig, ax = plt.subplots(figsize=(4,6))
-                map_date(gdf, df, area_type, date_str, ax, range=(0,max_val), feature=feature_dict[metric])
+                map_date(gdf, df, area_type, date_str, ax, y_limit=max_val, feature=feature_dict[metric])
                 ctx.add_basemap(ax, zoom=6, url=ctx.providers.Stamen.TonerBackground)
                 fig.savefig(filename, dpi=300)
                 plt.close()
@@ -220,7 +226,7 @@ def make_gif(shapefile, area_type, metric, num_days, remove_days=2, make_images=
     imageio.mimsave(f'img/map_gif_{area_type}_{metric}.gif', images)
 
 if __name__ == "__main__":
-    make_gif('mapping','utla','newCases', 250)
-    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245)
+    make_gif('mapping','utla','newCases', 250, max_val=1000)
+    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245, max_val=50)
 
 # %%
