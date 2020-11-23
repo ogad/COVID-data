@@ -227,6 +227,6 @@ def make_gif(shapefile, area_type, metric, num_days, max_val=None, remove_days=2
 
 if __name__ == "__main__":
     make_gif('mapping','utla','newCases', 250, max_val=1000)
-    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245, max_val=50)
+    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245, max_val=50, remove_days=3)
 
 # %%
