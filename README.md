@@ -38,4 +38,4 @@ This gif displays the most recent 200 days of hospital admissions for NHS region
 
 <img src="img/map_gif_nhsRegion_newAdmissions.gif" alt="The admissions per million, as an animated gif by upper-tier local authority" width=500>
 
-Images last updated 23-11-2020.
+Images last updated 10-12-2020.
