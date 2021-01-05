@@ -92,11 +92,15 @@ utlas = [
     'North Yorkshire'
 ]
 df_utlas = df[df.areaName.isin(utlas)]
+df_utlas = df_utlas[df_utlas.date != pd.to_datetime(date.today())]
+df_utlas = df_utlas[df_utlas.date != pd.to_datetime(date.today())-timedelta(days=1)]
+df_utlas = df_utlas[df_utlas.date != pd.to_datetime(date.today()-timedelta(days=2))]
+
 
 sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName',data=df_utlas)
 plt.xticks(rotation=30, ha='right')
-plt.title('New cases per million people by UTLA (7 day rolling)')
-plt.ylabel("New cases per million population")
+plt.title('Positive tests per million people by UTLA (7 day rolling)')
+plt.ylabel("Positive tests per million population")
 plt.xlabel("Date")
 plt.legend(title = "Upper-tier local authority")
 plt.tight_layout()
@@ -110,8 +114,8 @@ df = make_rolling(df)
 plt.figure()
 sns.lineplot(x='date',y='newCasesPerMillionRolling', hue='areaName', data=df)
 plt.xticks(rotation=30, ha='right')
-plt.title('New cases per million people by Nation (7 day rolling)')
-plt.ylabel("New cases per million population")
+plt.title('Positive tests per million people by Nation (7 day rolling)')
+plt.ylabel("Positive tests per million population")
 plt.xlabel("Date")
 plt.legend(title = "Nation")
 plt.tight_layout()
@@ -226,7 +230,7 @@ def make_gif(shapefile, area_type, metric, num_days, max_val=None, remove_days=2
     imageio.mimsave(f'img/map_gif_{area_type}_{metric}.gif', images)
 
 if __name__ == "__main__":
-    make_gif('mapping','utla','newCases', 250, max_val=1000)
-    make_gif('mapping_nhs','nhsRegion','newAdmissions', 245, max_val=50, remove_days=3)
+    # make_gif('mapping','utla','newCases', 300, max_val=1000)
+    make_gif('mapping_nhs','nhsRegion','newAdmissions', 285, max_val=50, remove_days=3)
 
 # %%

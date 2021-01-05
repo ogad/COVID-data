@@ -10,8 +10,9 @@ Mapping data contains OS data © Crown copyright and database right 2019.
 These visualisations each use a 7-day rolling average to draw attention to the overall trend and reduce the effect of variations during the working week and noise.
 These figures last updated on 04/10/2020.
 
-### Cases by nation throughout the pandemic
+### Positive tests by nation throughout the pandemic
 ![Case rate by nation in the UK](img/nation_cases.svg)
+Take note of how tiny the first wave looks compared to later spikes. Looking at more reliable indicators it is clear that the peaks are comparable, but testing is much more available now.
 
 ### Deaths by nation throughout the pandemic
 ![Death rate by nation in the UK](img/nation_deaths.svg)
@@ -22,7 +23,7 @@ These figures last updated on 04/10/2020.
 ### Cases by the upper-tier local authority
 ![Case rate by nation in the UK](img/utla_cases.svg)
 
-This displays cases in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. To combat this effect, the data from the most recent days is omitted.
+This displays the positive tests in a small number of local authorities. Here the cases are by specimen date, which leads to a downtick for the most recent dates, due to reporting lag. To combat this effect, the data from the most recent days is omitted.
 
 ## Maps
 ### Map of confirmed cases by the upper-tier local authority
@@ -38,4 +39,4 @@ This gif displays the most recent 200 days of hospital admissions for NHS region
 
 <img src="img/map_gif_nhsRegion_newAdmissions.gif" alt="The admissions per million, as an animated gif by upper-tier local authority" width=500>
 
-Images last updated 10-12-2020.
+Images last updated 05-01-2021.
